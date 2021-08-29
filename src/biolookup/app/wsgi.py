@@ -104,7 +104,7 @@ def get_app(
     app.register_blueprint(biolookup_blueprint)
 
     @app.before_first_request
-    def before_first_request():
+    def _before_first_request():
         logger.info("before_first_request")
         backend.count_all()
 
