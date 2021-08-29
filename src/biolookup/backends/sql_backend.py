@@ -8,11 +8,11 @@ from collections import Counter
 from functools import lru_cache
 from typing import Optional, Union
 
-from pyobo.constants import ALTS_TABLE_NAME, DEFS_TABLE_NAME, REFS_TABLE_NAME, get_sqlalchemy_uri
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 
 from .backend import Backend
+from ..constants import ALTS_TABLE_NAME, DEFS_TABLE_NAME, REFS_TABLE_NAME, get_sqlalchemy_uri
 
 __all__ = [
     "RawSQLBackend",

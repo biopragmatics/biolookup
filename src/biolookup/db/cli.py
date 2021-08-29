@@ -7,8 +7,9 @@ Run with ``biolookup load``.
 
 import click
 from more_click import verbose_option
-from pyobo.constants import ALTS_TABLE_NAME, DEFS_TABLE_NAME, REFS_TABLE_NAME, get_sqlalchemy_uri
 from pyobo.resource_utils import ensure_alts, ensure_definitions, ensure_ooh_na_na
+
+from ..constants import ALTS_TABLE_NAME, DEFS_TABLE_NAME, REFS_TABLE_NAME, get_sqlalchemy_uri
 
 __all__ = [
     "load",

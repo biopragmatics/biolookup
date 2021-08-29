@@ -18,11 +18,12 @@ from typing import Optional, Union
 
 import click
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
-from pyobo.constants import ALTS_TABLE_NAME, DEFS_TABLE_NAME, REFS_TABLE_NAME, get_sqlalchemy_uri
 from pyobo.resource_utils import ensure_alts, ensure_definitions, ensure_ooh_na_na
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from tabulate import tabulate
+
+from ..constants import ALTS_TABLE_NAME, DEFS_TABLE_NAME, REFS_TABLE_NAME, get_sqlalchemy_uri
 
 __all__ = [
     "load",

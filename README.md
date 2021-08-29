@@ -71,9 +71,9 @@ $ biolookup web --sql --uri postgresql+psycopg2://postgres:biolookup@localhost:5
 ```
 
 If `--uri` is not given for the `web` subcommand, it
-uses `pystow.get_config("pyobo", "sqlalchemy_uri)`to look up from `PYOBO_SQLALCHEMY_URI` or
-in `~/.config/pyobo.ini`. If none is given, it defaults to a SQLite database
-in `~/.data/pyobo/pyobo.db`.
+uses `pystow.get_config("biolookup", "sqlalchemy_uri)`to look up from `BIOLOOKUP_SQLALCHEMY_URI` or
+in `~/.config/biolookup.ini`. If none is given, it defaults to a SQLite database
+in `~/.data/biolookup/biolookup.db`.
 
 ### 🗂️ Load the Database
 
@@ -82,9 +82,9 @@ $ biolookup load  --uri postgresql+psycopg2://postgres:biolookup@localhost:5434/
 ```
 
 If `--uri` is not given for the `load` subcommand, it
-uses `pystow.get_config("pyobo", "sqlalchemy_uri)` to look up from `PYOBO_SQLALCHEMY_URI` or
-in `~/.config/pyobo.ini`. If none is given, it defaults to a SQLite database
-in `~/.data/pyobo/pyobo.db`.
+uses `pystow.get_config("biolookup", "sqlalchemy_uri)`to look up from `BIOLOOKUP_SQLALCHEMY_URI` or
+in `~/.config/biolookup.ini`. If none is given, it creates a defaults a SQLite database
+at `~/.data/biolookup/biolookup.db`.
 
 ## 🚀 Installation
 

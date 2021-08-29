@@ -12,9 +12,13 @@ from typing import Optional
 import click
 from more_click import host_option, port_option, run_app, verbose_option, with_gunicorn_option
 
+from ..constants import MODULE
+
 __all__ = [
     "web",
 ]
+
+LOG_PATH = MODULE.join(name="log.txt")
 
 
 @click.command()
@@ -28,7 +32,7 @@ __all__ = [
     is_flag=True,
     help="Use a sql database backend. If not used, defaults to in memory dictionaries",
 )
-@click.option("--uri", help="SQL URI string if using --sql. ")
+@click.option("--uri", help="SQL URI string when using --sql")
 @click.option("--sql-refs-table", help="use preloaded SQL database as backend")
 @click.option("--sql-alts-table", help="use preloaded SQL database as backend")
 @click.option("--sql-defs-table", help="use preloaded SQL database as backend")
@@ -109,11 +113,8 @@ def web(
         defs_table=sql_defs_table,
     )
 
-    from pyobo.constants import PYOBO_MODULE
-
-    log_path = PYOBO_MODULE.join("biolookup", name="log.txt")
     # see logging cookbook https://docs.python.org/3/howto/logging-cookbook.html
-    fh = logging.FileHandler(log_path)
+    fh = logging.FileHandler(LOG_PATH)
     fh.setLevel(logging.DEBUG)
     formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
     fh.setFormatter(formatter)
