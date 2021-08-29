@@ -65,6 +65,10 @@ def load(
     :param uri: The URI of the database to connect to.
     """
     engine = _ensure_engine(uri)
+    if refs_table is None:
+        refs_table = REFS_TABLE_NAME
+    if defs_table is None:
+        defs_table = DEFS_TABLE_NAME
     _load_alts(engine=engine, table=alts_table, path=alts_path, test=test)
     _load_definition(engine=engine, table=defs_table, path=defs_path, test=test)
     _load_name(engine=engine, table=refs_table, path=refs_path, test=test)
