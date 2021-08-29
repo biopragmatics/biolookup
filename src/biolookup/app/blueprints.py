@@ -38,7 +38,7 @@ def resolve(curie: str):
         required: true
         type: string
         example: doid:14330
-    """
+    """  # noqa:DAR101,DAR201
     logger.debug("resolving %s", curie)
     start = time.time()
     rv = backend.resolve(curie)
@@ -57,7 +57,7 @@ def size():
     """Return how much memory we're taking.
 
     Doesn't work if you're running with Gunicorn because it makes child processes.
-    """
+    """  # noqa:DAR201
     try:
         import psutil
     except ImportError:

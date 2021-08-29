@@ -77,7 +77,7 @@ def web(
             ],
             columns=["prefix", "identifier", "name"],
         )
-        click.echo(f"prepared {len(name_data):,} test names from {prefixes}")
+        click.echo(f"prepared {len(name_data.index):,} test names from {prefixes}")  # type:ignore
         alts_data = pd.DataFrame(
             [
                 (prefix, alt, identifier)
@@ -86,7 +86,7 @@ def web(
             ],
             columns=["prefix", "alt", "identifier"],
         )
-        click.echo(f"prepared {len(alts_data):,} test alts from {prefixes}")
+        click.echo(f"prepared {len(alts_data.index):,} test alts from {prefixes}")  # type:ignore
         defs_data = pd.DataFrame(
             [
                 (prefix, identifier, definition)
@@ -95,7 +95,7 @@ def web(
             ],
             columns=["prefix", "identifier", "definition"],
         )
-        click.echo(f"prepared {len(defs_data):,} test defs from {prefixes}")
+        click.echo(f"prepared {len(defs_data.index):,} test defs from {prefixes}")  # type:ignore
 
     app = get_app(
         name_data=name_data,

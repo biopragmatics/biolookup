@@ -8,18 +8,18 @@ import time
 from collections import Counter, defaultdict
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, List, Mapping, Optional, Union
-
-import pandas as pd
-from sqlalchemy import create_engine, text
-from sqlalchemy.engine import Engine
-from tqdm import tqdm
+from typing import Any, Callable, DefaultDict, Dict, List, Mapping, Optional, Union
 
 import bioregistry
+import pandas as pd
 import pyobo
 from pyobo import normalize_curie
 from pyobo.constants import ALTS_TABLE_NAME, DEFS_TABLE_NAME, REFS_TABLE_NAME, get_sqlalchemy_uri
 from pyobo.resource_utils import ensure_alts, ensure_definitions, ensure_ooh_na_na
+from sqlalchemy import create_engine, text
+from sqlalchemy.engine import Engine
+from tqdm import tqdm
+
 
 __all__ = [
     "Backend",
@@ -182,23 +182,26 @@ class MemoryBackend(Backend):
         self,
         get_id_name_mapping,
         get_alts_to_id,
-        summarize_names,
-        summarize_alts=None,
-        summarize_definitions=None,
+        summarize_names: Optional[Callable[[], Mapping[str, Any]]],
+        summarize_alts: Optional[Callable[[], Mapping[str, Any]]] = None,
+        summarize_definitions: Optional[Callable[[], Mapping[str, Any]]] = None,
         get_id_definition_mapping=None,
     ) -> None:
         """Initialize the in-memory backend.
 
         :param get_id_name_mapping: A function for getting id-name mappings
         :param get_alts_to_id: A function for getting alts-id mappings
-        :param summarize_names: A function for summarizing
+        :param summarize_names: A function for summarizing references
+        :param summarize_alts: A function for summarizing alts
+        :param summarize_definitions: A function for summarizing definitions
+        :param get_id_definition_mapping: A function for getting id-def mappings
         """
         self.get_id_name_mapping = get_id_name_mapping
         self.get_alts_to_id = get_alts_to_id
         self.get_id_definition_mapping = get_id_definition_mapping
-        self.summarize_names = summarize_names
-        self.summarize_alts = summarize_alts
-        self.summarize_definitions = summarize_definitions
+        self._summarize_names = summarize_names
+        self._summarize_alts = summarize_alts
+        self._summarize_definitions = summarize_definitions
 
     def has_prefix(self, prefix: str) -> bool:  # noqa:D102
         return self.get_id_name_mapping(prefix) is not None
@@ -213,25 +216,36 @@ class MemoryBackend(Backend):
 
     def get_definition(self, prefix: str, identifier: str) -> Optional[str]:  # noqa:D102
         if self.get_id_definition_mapping is None:
-            return
+            return None
         id_definition_mapping = self.get_id_definition_mapping(prefix) or {}
         return id_definition_mapping.get(identifier)
 
-    def count_prefixes(self) -> Optional[int]:  # noqa:D102
-        if self.summarize_names:
-            return len(self.summarize_names().keys())
+    def summarize_names(self) -> Mapping[str, Any]:  # noqa:D102
+        if self._summarize_names is None:
+            return {}
+        return self._summarize_names()
 
-    def count_names(self) -> Optional[int]:  # noqa:D102
-        if self.summarize_names:
-            return sum(self.summarize_names().values())
+    def count_prefixes(self) -> int:  # noqa:D102
+        return len(self.summarize_names().keys())
 
-    def count_alts(self) -> Optional[int]:  # noqa:D102
-        if self.summarize_alts:
-            return sum(self.summarize_alts().values())
+    def count_names(self) -> int:  # noqa:D102
+        return sum(self.summarize_names().values())
 
-    def count_definitions(self) -> Optional[int]:  # noqa:D102
-        if self.summarize_definitions:
-            return sum(self.summarize_definitions().values())
+    def summarize_alts(self) -> Mapping[str, Any]:  # noqa:D102
+        if self._summarize_alts is None:
+            return {}
+        return self._summarize_alts()
+
+    def count_alts(self) -> int:  # noqa:D102
+        return sum(self.summarize_alts().values())
+
+    def summarize_definitions(self) -> Mapping[str, Any]:  # noqa:D102
+        if self._summarize_definitions is None:
+            return {}
+        return self._summarize_definitions()
+
+    def count_definitions(self) -> int:  # noqa:D102
+        return sum(self.summarize_definitions().values())
 
 
 class RawSQLBackend(Backend):
@@ -251,8 +265,9 @@ class RawSQLBackend(Backend):
         """Initialize the raw SQL backend.
 
         :param refs_table: A name for the references (prefix-id-name) table. Defaults to 'obo_reference'
-        :param alts_table: A name for the alts (prefix-alt-id) table. Defaults to 'obo_alt'
-        :param engine:
+        :param alts_table: A name for the alts (prefix-id-alt) table. Defaults to 'obo_alt'
+        :param defs_table: A name for the defs (prefix-id-def) table. Defaults to 'obo_def'
+        :param engine: An engine, connection string, or None if you want the default.
         """
         if engine is None:
             self.engine = create_engine(get_sqlalchemy_uri())
@@ -357,6 +372,7 @@ class RawSQLBackend(Backend):
             result = connection.execute(sql, prefix=prefix, identifier=identifier).fetchone()
             if result:
                 return result[0]
+        return None
 
 
 def get_backend(
@@ -425,7 +441,7 @@ def get_backend(
 def _get_lookup_from_df(
     df: pd.DataFrame, desc: Optional[str] = None
 ) -> Mapping[str, Mapping[str, str]]:
-    lookup = defaultdict(dict)
+    lookup: DefaultDict[str, Dict[str, str]] = defaultdict(dict)
     if desc is None:
         desc = "processing mappings from df"
     it = tqdm(df.values, total=len(df.index), desc=desc, unit_scale=True)
@@ -437,7 +453,7 @@ def _get_lookup_from_df(
 def _get_lookup_from_path(
     path: Union[str, Path], desc: Optional[str] = None
 ) -> Mapping[str, Mapping[str, str]]:
-    lookup = defaultdict(dict)
+    lookup: DefaultDict[str, Dict[str, str]] = defaultdict(dict)
     if desc is None:
         desc = "loading mappings"
     with gzip.open(path, "rt") as file:

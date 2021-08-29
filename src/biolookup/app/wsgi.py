@@ -58,13 +58,21 @@ def get_app(
     """Build a flask app.
 
     :param name_data: If none, uses the internal PyOBO loader. If a string, assumes is a gzip and reads a
-     dataframe from there. If a dataframe, uses it directly. Assumes data frame has 3 columns - prefix,
-     identifier, and name and is a TSV.
+         dataframe from there. If a dataframe, uses it directly. Assumes data frame has 3 columns - prefix,
+         identifier, and name and is a TSV.
     :param alts_data: If none, uses the internal PyOBO loader. If a string, assumes is a gzip and reads a
-     dataframe from there. If a dataframe, uses it directly. Assumes data frame has 3 columns - prefix,
-     alt identifier, and identifier and is a TSV.
+         dataframe from there. If a dataframe, uses it directly. Assumes data frame has 3 columns - prefix,
+         alt identifier, and identifier and is a TSV.
+    :param defs_data: If none, uses the internal PyOBO loader. If a string, assumes is a gzip and reads a
+         dataframe from there. If a dataframe, uses it directly. Assumes data frame has 3 columns - prefix,
+         identifier identifier, and definition and is a TSV.
     :param lazy: don't load the full cache into memory to run
-    :param sql_table: Use SQL-based backend
+    :param sql: use a remote SQL database
+    :param uri: If using a remote SQL database, specify a non-default connection string
+    :param refs_table: Name of the reference table in the SQL database
+    :param alts_table: Name of the alternative identifiers table in the SQL database
+    :param defs_table: Name of the definitions table in the SQL database
+    :return: A pre-built flask app.
     """
     app = Flask(__name__)
     Swagger(
