@@ -19,16 +19,18 @@ logger = logging.getLogger(__name__)
 biolookup_blueprint = Blueprint("biolookup", __name__)
 
 
+@biolookup_blueprint.route("/resolve/<curie>")
 @biolookup_blueprint.route("/lookup/<curie>")
 def resolve(curie: str):
-    """Resolve a CURIE.
+    """Lookup a CURIE.
 
-    The goal of this endpoint is to resolve a CURIE.
+    The goal of this endpoint is to lookup metadata and ontological information
+    about an entity via its CURIE.
 
     - ``doid:14330``, an exact match to the CURIE for Parkinson's disease in the Disease Ontology
     - ``DOID:14330``, a close match to the CURIE for Parkinson's disease in the Disease Ontology, only differing
       by capitalization
-    - ``do:14330``, a match to doid via synonyms in the metaregistry. Still resolves to Parkinson's disease
+    - ``do:14330``, a match to doid via synonyms in the Bioregistry. Still resolves to Parkinson's disease
       in the Disease Ontology.
     ---
     parameters:

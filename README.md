@@ -37,9 +37,27 @@
 
 Get metadata and ontological information about biomedical entities.
 
-### 🕸️ Lookup App
+### 🔍 Querying the Biolookup Service
 
-After installing with the `[web]` extras, you can run the lookup app in local mode with:
+The Biolookup Service has an endpoint `/lookup/<curie>` for retrieving metadata
+and ontological information about a biomedical entity via its compact identifier (CURIE).
+
+```python
+import requests
+
+res = requests.get("http://localhost:5000/lookup/doid:14330").json()
+assert res["name"] == "Parkinson's disease"
+assert res["identifier"] == "14330"
+assert res["prefix"] == "doid"
+assert res["definition"] is not None  # not shown for brevity
+```
+
+The [INDRA Lab](https://indralab.github.io) hosts an instance of the Biolookup Service at 
+http://biolookup.io, so you can alternatively use `http://biolookup.io/lookup/doid:14330`.
+
+### 🕸️ Running the Lookup App
+
+You can run the lookup app in local mode with:
 
 ```shell
 $ biolookup web --lazy
