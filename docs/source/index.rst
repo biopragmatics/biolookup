@@ -7,7 +7,6 @@ Biolookup |release| Documentation
    :name: start
 
    installation
-   usage
    cli
 
 Indices and Tables
