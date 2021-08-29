@@ -35,7 +35,7 @@
     </a>
 </p>
 
-Get metadata and ontological information about all biomedical entities.
+Get metadata and ontological information about biomedical entities.
 
 ### 🕸️ Lookup App
 
