@@ -149,19 +149,11 @@ def _load_table(
     engine: Union[None, str, Engine] = None,
     add_unique_constraints: bool = True,
     add_reverse_index: bool = False,
-    use_md5: bool = False,
     use_varchar: bool = True,
 ) -> None:
     engine = _ensure_engine(engine)
 
     drop_statement = f"DROP TABLE IF EXISTS {table} CASCADE;"
-
-    if use_md5:
-        md5_ddl = (
-            "\nmd5_hash VARCHAR(32) GENERATED ALWAYS AS (md5(prefix || ':' || identifier)) STORED,"
-        )
-    else:
-        md5_ddl = ""
 
     if use_varchar:
         if target_col_size is None:
@@ -176,7 +168,7 @@ def _load_table(
     CREATE TABLE {table} (
         id           SERIAL,  /* automatically the primary key */
         prefix       VARCHAR(32) NOT NULL,
-        identifier   VARCHAR(64) NOT NULL,{md5_ddl}
+        identifier   VARCHAR(64) NOT NULL,
         {target_col} {target_col_type} NOT NULL
     ) WITH (
         autovacuum_enabled = false,
@@ -215,19 +207,11 @@ def _load_table(
     ).rstrip()
 
     index_curie_statement = f"CREATE INDEX ON {table} (prefix, identifier);"
-    index_md5_statement = f"CREATE INDEX ON {table} (md5_hash);"
 
     unique_curie_stmt = dedent(
         f"""
     ALTER TABLE {table}
         ADD CONSTRAINT {table}_prefix_identifier_unique UNIQUE (prefix, identifier);
-    """
-    ).rstrip()
-
-    unique_md5_hash_stmt = dedent(
-        f"""
-    ALTER TABLE {table}
-        ADD CONSTRAINT {table}_md5_hash_unique UNIQUE (md5_hash);
     """
     ).rstrip()
 
@@ -277,22 +261,10 @@ def _load_table(
             cursor.execute(index_curie_statement)
             echo("End indexing")
 
-            if use_md5:
-                echo("Start index on MD5 hash")
-                echo(index_md5_statement, fg="yellow")
-                cursor.execute(index_md5_statement)
-                echo("End indexing")
-
             if add_unique_constraints:
                 echo("Start unique on prefix/identifier")
                 echo(unique_curie_stmt, fg="yellow")
                 cursor.execute(unique_curie_stmt)
-                echo("End unique")
-
-            if add_unique_constraints and use_md5:
-                echo("Start unique on md5_hash")
-                echo(unique_md5_hash_stmt, fg="yellow")
-                cursor.execute(unique_md5_hash_stmt)
                 echo("End unique")
 
             if add_reverse_index:
@@ -323,10 +295,7 @@ def _load_table(
         click.secho("Example query:", fg="green", bold=True)
         click.secho(select_statement, fg="green")
         result = connection.execute(select_statement)
-        if use_md5:
-            headers = ["id", "prefix", "identifier", target_col, "md5_hash"]
-        else:
-            headers = ["id", "prefix", "identifier", target_col]
+        headers = ["id", "prefix", "identifier", target_col]
         click.echo(tabulate(map(tuple, result), headers=headers))
 
         # Summary table
