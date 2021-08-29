@@ -27,6 +27,9 @@
     <a href='https://biolookup.readthedocs.io/en/latest/?badge=latest'>
         <img src='https://readthedocs.org/projects/biolookup/badge/?version=latest' alt='Documentation Status' />
     </a>
+    <a href="https://zenodo.org/badge/latestdoi/400996921">
+        <img src="https://zenodo.org/badge/400996921.svg" alt="DOI">
+    </a>
     <a href='https://github.com/psf/black'>
         <img src='https://img.shields.io/badge/code%20style-black-000000.svg' alt='Code style: black' />
     </a>
@@ -55,14 +58,12 @@ a SQLite database in `~/.data/pyobo/pyobo.db`.
 
 ## 🚀 Installation
 
-<!-- Uncomment this section after your first ``tox -e finish``
 The most recent release can be installed from
 [PyPI](https://pypi.org/project/biolookup/) with:
 
 ```bash
 $ pip install biolookup
 ```
--->
 
 The most recent code and data can be installed directly from GitHub with:
 
