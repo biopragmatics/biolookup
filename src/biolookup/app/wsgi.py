@@ -14,9 +14,9 @@ from flask import Blueprint, Flask, render_template
 from flask_bootstrap import Bootstrap
 from humanize import intcomma
 
-from .backends import get_backend
 from .blueprints import biolookup_blueprint
 from .proxies import backend
+from ..backends import get_backend
 
 logger = logging.getLogger(__name__)
 

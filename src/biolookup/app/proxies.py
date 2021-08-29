@@ -5,7 +5,7 @@
 from flask import current_app
 from werkzeug.local import LocalProxy
 
-from .backends import Backend
+from ..backends import Backend
 
 __all__ = ["backend"]
 

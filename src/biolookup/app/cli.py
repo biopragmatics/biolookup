@@ -118,11 +118,12 @@ def web(
     formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
     fh.setFormatter(formatter)
 
-    from . import backends, wsgi
+    from . import wsgi
+    from ..backends import sql_backend
 
     logging.getLogger("werkzeug").addHandler(fh)
-    backends.logger.setLevel(logging.DEBUG)
-    backends.logger.addHandler(fh)
+    sql_backend.logger.setLevel(logging.DEBUG)
+    sql_backend.logger.addHandler(fh)
     wsgi.logger.setLevel(logging.DEBUG)
     wsgi.logger.addHandler(fh)
 
