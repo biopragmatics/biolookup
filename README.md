@@ -52,9 +52,21 @@ can run in remote mode with the `--sql` flag:
 $ biolookup web --sql --uri postgresql+psycopg2://postgres:biolookup@localhost:5434/biolookup
 ```
 
-If `--uri` is not given for the load command, it uses `pystow.get_config("pyobo","sqlalchemy_uri)`
-to look up from `PYOBO_SQLALCHEMY_URI` or in `~/.config/pyobo.ini`. If none is given, it defaults to
-a SQLite database in `~/.data/pyobo/pyobo.db`.
+If `--uri` is not given for the `web` subcommand, it
+uses `pystow.get_config("pyobo", "sqlalchemy_uri)`to look up from `PYOBO_SQLALCHEMY_URI` or
+in `~/.config/pyobo.ini`. If none is given, it defaults to a SQLite database
+in `~/.data/pyobo/pyobo.db`.
+
+### 🗂️ Load the Database
+
+```shell
+$ biolookup load  --uri postgresql+psycopg2://postgres:biolookup@localhost:5434/biolookup
+```
+
+If `--uri` is not given for the `load` subcommand, it
+uses `pystow.get_config("pyobo", "sqlalchemy_uri)` to look up from `PYOBO_SQLALCHEMY_URI` or
+in `~/.config/pyobo.ini`. If none is given, it defaults to a SQLite database
+in `~/.data/pyobo/pyobo.db`.
 
 ## 🚀 Installation
 

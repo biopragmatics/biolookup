@@ -18,6 +18,7 @@ import logging
 import click
 
 from .app.cli import web
+from .db.cli import load
 
 __all__ = ["main"]
 
@@ -31,6 +32,7 @@ def main():
 
 
 main.add_command(web)
+main.add_command(load)
 
 if __name__ == "__main__":
     main()

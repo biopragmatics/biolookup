@@ -2,7 +2,7 @@
 
 """Biolookup Service CLI.
 
-Run with ``python -m biolookup.app``
+Run with ``biolookup web``.
 """
 
 from .cli import web
