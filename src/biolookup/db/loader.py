@@ -2,7 +2,7 @@
 
 """Upload the Ooh Na Na nomenclature database to PostgreSQL.
 
-After installing with pip, run with: ``pyobo database sql load``.
+After installing with pip, run with: ``biolookup load``.
 This will take care of downloading the latest data from Zenodo (you
 might need to set up an API key) and loading it into a SQL database.
 Use ``--help`` for options on configuration.
