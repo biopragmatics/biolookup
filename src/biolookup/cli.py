@@ -17,6 +17,8 @@ import logging
 
 import click
 
+from .app.cli import web
+
 __all__ = ["main"]
 
 logger = logging.getLogger(__name__)
@@ -25,8 +27,10 @@ logger = logging.getLogger(__name__)
 @click.group()
 @click.version_option()
 def main():
-    """CLI for biolookup."""
+    """CLI for the Biolookup Service."""
 
+
+main.add_command(web)
 
 if __name__ == "__main__":
     main()

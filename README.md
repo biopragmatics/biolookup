@@ -34,22 +34,24 @@
 
 Get metadata and ontological information about all biomedical entities.
 
-## 💪 Getting Started
+### 🕸️ Lookup App
 
-> TODO show in a very small amount of space the **MOST** useful thing your package can do.
-Make it as short as possible! You have an entire set of docs for later.
-
-### Command Line Interface
-
-The biolookup command line tool is automatically installed. It can
-be used from the shell with the `--help` flag to show all subcommands:
+After installing with the `[web]` extras, you can run the lookup app in local mode with:
 
 ```shell
-$ biolookup --help
+$ biolookup web --lazy
 ```
 
-> TODO show the most useful thing the CLI does! The CLI will have documentation auto-generated
-by `sphinx`.
+This means that the in-memory data from `pyobo` are used. If you have a large external database, you
+can run in remote mode with the `--sql` flag:
+
+```shell
+$ biolookup web --sql --uri postgresql+psycopg2://postgres:biolookup@localhost:5434/biolookup
+```
+
+If `--uri` is not given for the load command, it uses `pystow.get_config("pyobo","sqlalchemy_uri)`
+to look up from `PYOBO_SQLALCHEMY_URI` or in `~/.config/pyobo.ini`. If none is given, it defaults to
+a SQLite database in `~/.data/pyobo/pyobo.db`.
 
 ## 🚀 Installation
 
@@ -79,7 +81,8 @@ $ pip install -e .
 ## 👐 Contributing
 
 Contributions, whether filing an issue, making a pull request, or forking, are appreciated. See
-[CONTRIBUTING.rst](https://github.com/biolookup/biolookup/blob/master/CONTRIBUTING.rst) for more information on getting involved.
+[CONTRIBUTING.rst](https://github.com/biolookup/biolookup/blob/master/CONTRIBUTING.rst) for more
+information on getting involved.
 
 ## 👀 Attribution
 
@@ -100,7 +103,6 @@ The Biolookup Service was developed by the [INDRA Lab](https://indralab.github.i
 and the [Harvard Program in Therapeutic Science (HiTS)](https://hits.harvard.edu)
 at [Harvard Medical School](https://hms.harvard.edu/).
 
-
 ### 💰 Funding
 
 This project has been supported by the following grants:
@@ -112,5 +114,6 @@ This project has been supported by the following grants:
 ### 🍪 Cookiecutter
 
 This package was created with [@audreyfeldroy](https://github.com/audreyfeldroy)'s
-[cookiecutter](https://github.com/cookiecutter/cookiecutter) package using [@cthoyt](https://github.com/cthoyt)'s
+[cookiecutter](https://github.com/cookiecutter/cookiecutter) package
+using [@cthoyt](https://github.com/cthoyt)'s
 [cookiecutter-snekpack](https://github.com/cthoyt/cookiecutter-snekpack) template.

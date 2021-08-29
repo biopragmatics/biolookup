@@ -5,7 +5,7 @@
 Run with ``python -m biolookup.app``
 """
 
-from .cli import main
+from .cli import web
 
 if __name__ == "__main__":
-    main()
+    web()

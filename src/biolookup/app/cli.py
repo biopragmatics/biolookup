@@ -13,11 +13,11 @@ import click
 from more_click import host_option, port_option, run_app, verbose_option, with_gunicorn_option
 
 __all__ = [
-    "main",
+    "web",
 ]
 
 
-@click.command(name="resolver")
+@click.command()
 @port_option
 @host_option
 @click.option("--name-data", help="local 3-column gzipped TSV as database")
@@ -28,7 +28,7 @@ __all__ = [
     is_flag=True,
     help="Use a sql database backend. If not used, defaults to in memory dictionaries",
 )
-@click.option("--sql-uri", help="SQL URI string if using --sql. ")
+@click.option("--uri", help="SQL URI string if using --sql. ")
 @click.option("--sql-refs-table", help="use preloaded SQL database as backend")
 @click.option("--sql-alts-table", help="use preloaded SQL database as backend")
 @click.option("--sql-defs-table", help="use preloaded SQL database as backend")
@@ -37,11 +37,11 @@ __all__ = [
 @click.option("--workers", type=int, help="number of workers to use in --gunicorn mode")
 @with_gunicorn_option
 @verbose_option
-def main(
+def web(
     port: str,
     host: str,
     sql: bool,
-    sql_uri: Optional[str],
+    uri: Optional[str],
     sql_refs_table: Optional[str],
     sql_alts_table: Optional[str],
     sql_defs_table: Optional[str],
@@ -53,7 +53,7 @@ def main(
     lazy: bool,
     workers: int,
 ):
-    """Run the resolver app."""
+    """Run the Biolookup Service."""
     if test:
         if lazy:
             click.secho("Can not run in --test and --lazy mode at the same time", fg="red")
@@ -103,7 +103,7 @@ def main(
         defs_data=defs_data,
         lazy=lazy,
         sql=sql,
-        uri=sql_uri,
+        uri=uri,
         refs_table=sql_refs_table,
         alts_table=sql_alts_table,
         defs_table=sql_defs_table,
@@ -130,4 +130,4 @@ def main(
 
 
 if __name__ == "__main__":
-    main()
+    web()
