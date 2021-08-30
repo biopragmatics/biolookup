@@ -27,6 +27,7 @@ from tabulate import tabulate
 from ..constants import (
     ALTS_TABLE_NAME,
     DEFS_TABLE_NAME,
+    DERIVED_NAME,
     REFS_TABLE_NAME,
     SPECIES_TABLE_NAME,
     get_sqlalchemy_uri,
@@ -88,6 +89,49 @@ def load(
     _load_definition(engine=engine, table=defs_table, path=defs_path, test=test)
     _load_name(engine=engine, table=refs_table, path=refs_path, test=test)
     _load_species(engine=engine, table=species_table, path=species_path, test=test)
+
+    # Use
+    drop_derived = f"DROP TABLE IF EXISTS {DERIVED_NAME} CASCADE;"
+    create_derived = dedent(f"""\
+        CREATE TABLE {DERIVED_NAME} AS (
+        SELECT r.prefix, r.identifier, r.name, d.definition, s.species
+        FROM {REFS_TABLE_NAME} r
+        LEFT JOIN {DEFS_TABLE_NAME} d on r.prefix = d.prefix
+            and r.identifier = d.identifier
+        LEFT JOIN {SPECIES_TABLE_NAME} s on r.prefix = s.prefix
+            and r.identifier = s.identifier
+        )
+    """).rstrip()
+    pkey_statement = dedent(f"""
+        ALTER TABLE {DERIVED_NAME}
+            ADD CONSTRAINT pk_{DERIVED_NAME} PRIMARY KEY (prefix, identifier);
+    """).rstrip()
+
+    with closing(engine.raw_connection()) as connection:
+        with closing(connection.cursor()) as cursor:
+            echo("Cleanup table")
+            echo(drop_derived, fg="yellow")
+            cursor.execute(drop_derived)
+
+            echo("Creating derived table")
+            echo(create_derived, fg="yellow")
+            cursor.execute(create_derived)
+            echo("Done creating derived table")
+
+            echo("Indexing PKEY on derived table")
+            echo(pkey_statement, fg="yellow")
+            cursor.execute(pkey_statement)
+            echo("Done indexing PKEY on derived table")
+
+            echo("Dropping unused tables")
+            drop_refs = f"DROP TABLE {refs_table} CASCADE;"
+            echo(drop_refs)
+            cursor.execute(drop_refs)
+            drop_defs = f"DROP TABLE {defs_table} CASCADE;"
+            echo(drop_defs)
+            cursor.execute(drop_defs)
+
+    echo("Done")
 
 
 def _load_alts(
