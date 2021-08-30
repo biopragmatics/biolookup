@@ -13,6 +13,7 @@ import io
 import logging
 import time
 from contextlib import closing
+from pathlib import Path
 from textwrap import dedent
 from typing import Optional, Union
 
@@ -44,9 +45,9 @@ TEST_N = 100_000
 
 def load(
     *,
-    refs_path: Optional[str] = None,
-    alts_path: Optional[str] = None,
-    defs_path: Optional[str] = None,
+    refs_path: Union[None, str, Path] = None,
+    alts_path: Union[None, str, Path] = None,
+    defs_path: Union[None, str, Path] = None,
     refs_table: Optional[str] = None,
     alts_table: Optional[str] = None,
     defs_table: Optional[str] = None,
@@ -78,7 +79,7 @@ def _load_alts(
     *,
     engine: Union[None, str, Engine] = None,
     table: Optional[str] = None,
-    path: Optional[str] = None,
+    path: Union[None, str, Path] = None,
     test: bool = False,
 ):
     engine = _ensure_engine(engine)
@@ -98,7 +99,7 @@ def _load_definition(
     *,
     engine: Union[None, str, Engine] = None,
     table: Optional[str] = None,
-    path: Optional[str] = None,
+    path: Union[None, str, Path] = None,
     test: bool = False,
 ):
     engine = _ensure_engine(engine)
@@ -116,7 +117,7 @@ def _load_name(
     *,
     engine: Union[None, str, Engine] = None,
     table: Optional[str] = None,
-    path: Optional[str] = None,
+    path: Union[None, str, Path] = None,
     test: bool = False,
 ):
     engine = _ensure_engine(engine)
@@ -141,7 +142,7 @@ def _ensure_engine(engine: Union[None, str, Engine] = None) -> Engine:
 
 def _load_table(
     table: str,
-    path: str,
+    path: Union[str, Path],
     target_col: str,
     *,
     test: bool = False,

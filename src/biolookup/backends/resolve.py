@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import DefaultDict, Dict, Mapping, Optional, Union
 
 import pandas as pd
+from sqlalchemy.engine import Engine
 from tqdm import tqdm
 
 from .backend import Backend
@@ -28,7 +29,7 @@ def get_backend(
     defs_data: Union[None, str, pd.DataFrame] = None,
     lazy: bool = False,
     sql: bool = False,
-    uri: Optional[str] = None,
+    uri: Union[None, str, Engine] = None,
     refs_table: Optional[str] = None,
     alts_table: Optional[str] = None,
     defs_table: Optional[str] = None,
