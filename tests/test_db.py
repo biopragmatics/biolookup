@@ -80,6 +80,14 @@ class TestDatabase(unittest.TestCase):
             )
             self.assertIsInstance(backend, RawSQLBackend)
 
+            self.assertEqual(6, backend.count_names())
+            self.assertEqual(5, backend.count_definitions())
+            self.assertEqual(1, backend.count_alts())
+
+            self.assertEqual({"p_1": 3, "p_2": 3}, dict(backend.summarize_names()))
+            self.assertEqual({"p_1": 3, "p_2": 2}, dict(backend.summarize_definitions()))
+            self.assertEqual({"p_1": 1}, dict(backend.summarize_alts()))
+
             # Test name lookup
             self.assertEqual("name_11", backend.get_name("p_1", "id_11"))
             self.assertEqual("name_23", backend.get_name("p_2", "id_23"))
@@ -89,5 +97,6 @@ class TestDatabase(unittest.TestCase):
             self.assertIsNone(backend.get_definition("p_2", "id_23"))
 
             # Test resolution of alt ids
+            self.assertEqual("id_23", backend.get_primary_id("p_1", "altid_11"))
             self.assertEqual("name_11", backend.get_name("p_1", "altid_11"))
             self.assertEqual("def_11", backend.get_definition("p_1", "altid_11"))
