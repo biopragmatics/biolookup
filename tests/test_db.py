@@ -21,7 +21,7 @@ REFS = [
     ("p_2", "id_23", "name_23"),
 ]
 ALTS = [
-    ("p_1", "altid_11", "id_11"),
+    ("p_1", "id_11", "altid_11"),
 ]
 DEFS = [
     ("p_1", "id_11", "def_11"),
@@ -97,6 +97,6 @@ class TestDatabase(unittest.TestCase):
             self.assertIsNone(backend.get_definition("p_2", "id_23"))
 
             # Test resolution of alt ids
-            self.assertEqual("id_23", backend.get_primary_id("p_1", "altid_11"))
+            self.assertEqual("id_11", backend.get_primary_id("p_1", "altid_11"))
             self.assertEqual("name_11", backend.get_name("p_1", "altid_11"))
             self.assertEqual("def_11", backend.get_definition("p_1", "altid_11"))
