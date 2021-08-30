@@ -15,6 +15,7 @@ from .backend import Backend
 from ..constants import (
     ALTS_TABLE_NAME,
     DEFS_TABLE_NAME,
+    DERIVED_NAME,
     REFS_TABLE_NAME,
     SPECIES_TABLE_NAME,
     get_sqlalchemy_uri,
@@ -49,6 +50,7 @@ class RawSQLBackend(Backend):
         alts_table: Optional[str] = None,
         defs_table: Optional[str] = None,
         species_table: Optional[str] = None,
+        derived_table: Optional[str] = None,
         engine: Union[None, str, Engine] = None,
     ):
         """Initialize the raw SQL backend.
@@ -65,6 +67,7 @@ class RawSQLBackend(Backend):
         self.alts_table = alts_table or ALTS_TABLE_NAME
         self.defs_table = defs_table or DEFS_TABLE_NAME
         self.species_table = species_table or SPECIES_TABLE_NAME
+        self.derived_table = derived_table or DERIVED_NAME
 
     @lru_cache(maxsize=1)
     def count_names(self) -> int:
@@ -124,7 +127,7 @@ class RawSQLBackend(Backend):
     def has_prefix(self, prefix: str) -> bool:
         """Check for the prefix with a SQL query."""
         sql = text(
-            f"SELECT EXISTS(SELECT 1 from {self.refs_table} WHERE prefix = :prefix);"  # noqa:S608
+            f"SELECT EXISTS(SELECT 1 from {self.derived_table} WHERE prefix = :prefix);"  # noqa:S608
         )
         with self.engine.connect() as connection:
             result = connection.execute(sql, prefix=prefix).fetchone()
@@ -146,22 +149,22 @@ class RawSQLBackend(Backend):
 
     def get_name(self, prefix: str, identifier: str) -> Optional[str]:
         """Get the name with a SQL query to the names table."""
-        return self._help_one(self.refs_table, "name", prefix, identifier)
+        return self._help_one("name", prefix, identifier)
 
     def get_species(self, prefix: str, identifier: str) -> Optional[str]:
         """Get the species with a SQL query to the species table."""
-        return self._help_one(self.species_table, "species", prefix, identifier)
+        return self._help_one("species", prefix, identifier)
 
     def get_definition(self, prefix: str, identifier: str) -> Optional[str]:
         """Get the definition with a SQL query to the definitions table."""
-        return self._help_one(self.defs_table, "definition", prefix, identifier)
+        return self._help_one("definition", prefix, identifier)
 
     @lru_cache(maxsize=100_000)
-    def _help_one(self, table: str, column: str, prefix: str, identifier: str) -> Optional[str]:
+    def _help_one(self, column: str, prefix: str, identifier: str) -> Optional[str]:
         sql = text(
             f"""
             SELECT {column}
-            FROM {table}
+            FROM {self.derived_table}
             WHERE prefix = :prefix and identifier = :identifier;
         """
         )  # noqa:S608

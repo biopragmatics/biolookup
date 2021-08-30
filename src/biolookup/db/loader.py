@@ -60,6 +60,7 @@ def load(
     alts_table: Optional[str] = None,
     defs_table: Optional[str] = None,
     species_table: Optional[str] = None,
+    derived_table: Optional[str] = None,
     test: bool = False,
     uri: Optional[str] = None,
 ) -> None:
@@ -85,26 +86,28 @@ def load(
         defs_table = DEFS_TABLE_NAME
     if species_table is None:
         species_table = SPECIES_TABLE_NAME
+    if derived_table is None:
+        derived_table = DERIVED_NAME
     _load_alts(engine=engine, table=alts_table, path=alts_path, test=test)
     _load_definition(engine=engine, table=defs_table, path=defs_path, test=test)
     _load_name(engine=engine, table=refs_table, path=refs_path, test=test)
     _load_species(engine=engine, table=species_table, path=species_path, test=test)
 
     # Use
-    drop_derived = f"DROP TABLE IF EXISTS {DERIVED_NAME} CASCADE;"
+    drop_derived = f"DROP TABLE IF EXISTS {derived_table} CASCADE;"
     create_derived = dedent(f"""\
-        CREATE TABLE {DERIVED_NAME} AS (
+        CREATE TABLE {derived_table} AS (
         SELECT r.prefix, r.identifier, r.name, d.definition, s.species
-        FROM {REFS_TABLE_NAME} r
-        LEFT JOIN {DEFS_TABLE_NAME} d on r.prefix = d.prefix
+        FROM {refs_table} r
+        LEFT JOIN {defs_table} d on r.prefix = d.prefix
             and r.identifier = d.identifier
-        LEFT JOIN {SPECIES_TABLE_NAME} s on r.prefix = s.prefix
+        LEFT JOIN {species_table} s on r.prefix = s.prefix
             and r.identifier = s.identifier
         )
     """).rstrip()
     pkey_statement = dedent(f"""
-        ALTER TABLE {DERIVED_NAME}
-            ADD CONSTRAINT pk_{DERIVED_NAME} PRIMARY KEY (prefix, identifier);
+        ALTER TABLE {derived_table}
+            ADD CONSTRAINT pk_{derived_table} PRIMARY KEY (prefix, identifier);
     """).rstrip()
 
     with closing(engine.raw_connection()) as connection:
@@ -130,6 +133,9 @@ def load(
             drop_defs = f"DROP TABLE {defs_table} CASCADE;"
             echo(drop_defs)
             cursor.execute(drop_defs)
+            drop_species = f"DROP TABLE {species_table} CASCADE;"
+            echo(drop_species)
+            cursor.execute(drop_species)
 
     echo("Done")
 
@@ -255,9 +261,10 @@ def _load_table(
     """
     ).rstrip()
 
+    drop_summary_statement = f"DROP TABLE IF EXISTS {table}_summary CASCADE;"
     create_summary_statement = dedent(
         f"""
-    CREATE MATERIALIZED VIEW {table}_summary AS
+    CREATE TABLE {table}_summary AS
       SELECT prefix, COUNT(identifier) as identifier_count
       FROM {table}
       GROUP BY prefix;
@@ -298,6 +305,8 @@ def _load_table(
             echo("Preparing blank slate")
             echo(drop_statement, fg="yellow")
             cursor.execute(drop_statement)
+            echo(drop_summary_statement, fg="yellow")
+            cursor.execute(drop_summary_statement)
 
             echo("Creating table")
             echo(create_statement, fg="yellow")
