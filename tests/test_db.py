@@ -13,20 +13,20 @@ from biolookup.backends import RawSQLBackend, get_backend
 from biolookup.db import loader
 
 REFS = [
-    ("p_1", "id_11", "name_11"),
-    ("p_1", "id_12", "name_12"),
-    ("p_1", "id_13", "name_13"),
+    ("hgnc", "id_11", "name_11"),
+    ("hgnc", "id_12", "name_12"),
+    ("hgnc", "id_13", "name_13"),
     ("p_2", "id_21", "name_21"),
     ("p_2", "id_22", "name_22"),
     ("p_2", "id_23", "name_23"),
 ]
 ALTS = [
-    ("p_1", "id_11", "altid_11"),
+    ("hgnc", "id_11", "altid_11"),
 ]
 DEFS = [
-    ("p_1", "id_11", "def_11"),
-    ("p_1", "id_12", "def_12"),
-    ("p_1", "id_13", "def_13"),
+    ("hgnc", "id_11", "def_11"),
+    ("hgnc", "id_12", "def_12"),
+    ("hgnc", "id_13", "def_13"),
     ("p_2", "id_21", "def_21"),
     ("p_2", "id_22", "def_22"),
     # ("p_2", "id_23", "def_23"),
@@ -84,19 +84,31 @@ class TestDatabase(unittest.TestCase):
             self.assertEqual(5, backend.count_definitions())
             self.assertEqual(1, backend.count_alts())
 
-            self.assertEqual({"p_1": 3, "p_2": 3}, dict(backend.summarize_names()))
-            self.assertEqual({"p_1": 3, "p_2": 2}, dict(backend.summarize_definitions()))
-            self.assertEqual({"p_1": 1}, dict(backend.summarize_alts()))
+            self.assertEqual({"hgnc": 3, "p_2": 3}, dict(backend.summarize_names()))
+            self.assertEqual({"hgnc": 3, "p_2": 2}, dict(backend.summarize_definitions()))
+            self.assertEqual({"hgnc": 1}, dict(backend.summarize_alts()))
 
             # Test name lookup
-            self.assertEqual("name_11", backend.get_name("p_1", "id_11"))
+            self.assertEqual("name_11", backend.get_name("hgnc", "id_11"))
             self.assertEqual("name_23", backend.get_name("p_2", "id_23"))
 
             # Test resolution of definitions
-            self.assertEqual("def_11", backend.get_definition("p_1", "id_11"))
+            self.assertEqual("def_11", backend.get_definition("hgnc", "id_11"))
             self.assertIsNone(backend.get_definition("p_2", "id_23"))
 
             # Test resolution of alt ids
-            self.assertEqual("id_11", backend.get_primary_id("p_1", "altid_11"))
-            self.assertEqual("name_11", backend.get_name("p_1", "altid_11"))
-            self.assertEqual("def_11", backend.get_definition("p_1", "altid_11"))
+            self.assertEqual("id_11", backend.get_primary_id("hgnc", "altid_11"))
+            self.assertIsNone(backend.get_name("hgnc", "altid_11"))
+            self.assertIsNone(backend.get_definition("hgnc", "altid_11"))
+
+            r = backend.resolve("hgnc:id_11")
+            self.assertEqual("hgnc", r["prefix"])
+            self.assertEqual("id_11", r["identifier"])
+            self.assertEqual("name_11", r["name"])
+            self.assertEqual("hgnc:id_11", r["query"])
+
+            r = backend.resolve("hgnc:altid_11")
+            self.assertEqual("hgnc", r["prefix"])
+            self.assertEqual("id_11", r["identifier"])
+            self.assertEqual("name_11", r["name"])
+            self.assertEqual("hgnc:altid_11", r["query"])
