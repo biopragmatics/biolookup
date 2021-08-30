@@ -132,7 +132,7 @@ def _load_species(
     *,
     engine: Union[None, str, Engine] = None,
     table: Optional[str] = None,
-    path: Optional[str] = None,
+    path: Union[None, str, Path] = None,
     test: bool = False,
 ):
     engine = _ensure_engine(engine)
