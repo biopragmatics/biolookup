@@ -8,6 +8,7 @@ import unittest
 from pathlib import Path
 from typing import ClassVar, Type
 
+import pyobo
 import pystow
 
 from biolookup.backends import Backend, MemoryBackend, RawSQLBackend, get_backend
@@ -150,6 +151,8 @@ class TestMemoryBackend(BackendTestCase):
 
     def setUp(self) -> None:
         """Prepare the in-memory backend."""
+        # Pre-load GO
+        _ = pyobo.get_id_name_mapping("go", strict=False)
         self.backend = get_backend(lazy=True)
 
     def test_memory_backend(self):
