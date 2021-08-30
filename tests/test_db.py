@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pystow
 
-from biolookup.backends import get_backend, RawSQLBackend
+from biolookup.backends import RawSQLBackend, get_backend
 from biolookup.db import loader
 
 REFS = [
@@ -65,10 +65,10 @@ class TestDatabase(unittest.TestCase):
             loader.load(
                 uri=TEST_URI,
                 refs_path=refs_path,
-                refs_table=self.refs_table,
                 alts_path=alts_path,
-                alts_table=self.alts_table,
                 defs_path=defs_path,
+                refs_table=self.refs_table,
+                alts_table=self.alts_table,
                 defs_table=self.defs_table,
             )
             backend = get_backend(
@@ -79,4 +79,15 @@ class TestDatabase(unittest.TestCase):
                 defs_table=self.defs_table,
             )
             self.assertIsInstance(backend, RawSQLBackend)
+
+            # Test name lookup
             self.assertEqual("name_11", backend.get_name("p_1", "id_11"))
+            self.assertEqual("name_23", backend.get_name("p_2", "id_23"))
+
+            # Test resolution of definitions
+            self.assertEqual("def_11", backend.get_definition("p_1", "id_11"))
+            self.assertIsNone(backend.get_definition("p_2", "id_23"))
+
+            # Test resolution of alt ids
+            self.assertEqual("name_11", backend.get_name("p_1", "altid_11"))
+            self.assertEqual("def_11", backend.get_definition("p_1", "altid_11"))
