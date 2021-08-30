@@ -6,6 +6,7 @@ import gzip
 import tempfile
 import unittest
 from pathlib import Path
+from typing import ClassVar, Type
 
 import pystow
 
@@ -24,7 +25,14 @@ REFS = [
 ALTS = [
     ("go", "0000073", "0030475"),
 ]
-DEF_1 = "The release of duplicated mitotic spindle pole bodies (SPBs) that begins with the nucleation of microtubules from each SPB within the nucleus, leading to V-shaped spindle microtubules. Interpolar microtubules that elongate from each pole are interconnected, forming overlapping microtubules. Capturing and antiparallel sliding apart of microtubules promotes the initial separation of the SPB."
+DEF_1 = (
+    "The release of duplicated mitotic spindle pole bodies (SPBs) that "
+    "begins with the nucleation of microtubules from each SPB within the "
+    "nucleus, leading to V-shaped spindle microtubules. Interpolar microtubules "
+    "that elongate from each pole are interconnected, forming overlapping "
+    "microtubules. Capturing and antiparallel sliding apart of microtubules "
+    "promotes the initial separation of the SPB."
+)
 DEFS = [
     ("go", "0000073", DEF_1),
     ("go", "0000075", "def_12"),
@@ -45,9 +53,13 @@ def _write(path, data, last):
 class BackendTestCase(unittest.TestCase):
     """A mixin for checking the backend."""
 
+    backend_cls: ClassVar[Type[Backend]]
+    counts: ClassVar[bool]
+
     def help_check(self, backend: Backend, counts: bool = True):
         """Check backend."""
-        self.assertIsInstance(backend, Backend)
+        self.assertTrue(issubclass(self.backend_cls, Backend))
+        self.assertIsInstance(backend, self.backend_cls)
 
         if counts:
             self.assertEqual(6, backend.count_names())
@@ -59,7 +71,9 @@ class BackendTestCase(unittest.TestCase):
             self.assertEqual({"go": 1}, dict(backend.summarize_alts()))
 
         # Test name lookup
-        self.assertEqual("initial mitotic spindle pole body separation", backend.get_name("go", "0000073"))
+        self.assertEqual(
+            "initial mitotic spindle pole body separation", backend.get_name("go", "0000073")
+        )
         self.assertEqual("RIT1", backend.get_name("hgnc", "10023"))
 
         # Test resolution of definitions
@@ -89,6 +103,9 @@ class BackendTestCase(unittest.TestCase):
 @unittest.skipUnless(TEST_URI, reason="No biolookup/test_uri configuration found")
 class TestRawSQLBackend(BackendTestCase):
     """Tests for the raw SQL backend."""
+
+    backend_cls = RawSQLBackend
+    counts = True
 
     def setUp(self) -> None:
         """Set up the test case."""
@@ -122,12 +139,14 @@ class TestRawSQLBackend(BackendTestCase):
                 alts_table=self.alts_table,
                 defs_table=self.defs_table,
             )
-            self.assertIsInstance(backend, RawSQLBackend)
-            self.help_check(backend)
+            self.help_check(backend, counts=self.counts)
 
 
 class TestMemoryBackend(BackendTestCase):
     """Tests for the in-memory backend."""
+
+    backend_cls = MemoryBackend
+    counts = False
 
     def setUp(self) -> None:
         """Prepare the in-memory backend."""
@@ -135,5 +154,4 @@ class TestMemoryBackend(BackendTestCase):
 
     def test_memory_backend(self):
         """Test the in-memory backend."""
-        self.assertIsInstance(self.backend, MemoryBackend)
-        self.help_check(self.backend, counts=False)
+        self.help_check(self.backend, counts=self.counts)
