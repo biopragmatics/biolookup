@@ -34,13 +34,19 @@ DEF_1 = (
     "microtubules. Capturing and antiparallel sliding apart of microtubules "
     "promotes the initial separation of the SPB."
 )
+DEF_2 = "receptor interacting serine/threonine kinase 2"
 DEFS = [
     ("go", "0000073", DEF_1),
     ("go", "0000075", "def_12"),
     ("go", "0000076", "def_13"),
-    ("hgnc", "10020", "def_21"),
+    ("hgnc", "10020", DEF_2),
     ("hgnc", "10021", "def_22"),
     # ("hgnc", "id_23", "def_23"),
+]
+SPECIES = [
+    ("hgnc", "10020", "9606"),
+    ("hgnc", "10021", "9606"),
+    ("hgnc", "10023", "9606"),
 ]
 
 
@@ -81,6 +87,10 @@ class BackendTestCase(unittest.TestCase):
         self.assertEqual(DEF_1, backend.get_definition("go", "0000073"))
         self.assertIsNone(backend.get_definition("hgnc", "1002310101010101"))
 
+        # Test resolution of species
+        self.assertEqual("9606", backend.get_species("hgnc", "10020"))
+        self.assertIsNone(backend.get_species("go", "0030475"))
+
         # Test resolution of alt ids
         self.assertEqual("0000073", backend.get_primary_id("go", "0030475"))
         self.assertIsNone(backend.get_name("go", "0030475"))
@@ -92,6 +102,7 @@ class BackendTestCase(unittest.TestCase):
         self.assertEqual("initial mitotic spindle pole body separation", r["name"])
         self.assertEqual(DEF_1, r["definition"])
         self.assertEqual("go:0000073", r["query"])
+        self.assertNotIn("species", r)
 
         r = backend.resolve("go:0030475")
         self.assertEqual("go", r["prefix"])
@@ -99,6 +110,16 @@ class BackendTestCase(unittest.TestCase):
         self.assertEqual("initial mitotic spindle pole body separation", r["name"])
         self.assertEqual(DEF_1, r["definition"])
         self.assertEqual("go:0030475", r["query"])
+        self.assertNotIn("species", r)
+
+        # Extra test to check species
+        r = backend.resolve("hgnc:10020")
+        self.assertEqual("hgnc", r["prefix"])
+        self.assertEqual("10020", r["identifier"])
+        self.assertEqual("RIPK2", r["name"])
+        self.assertEqual(DEF_2, r["definition"])
+        self.assertEqual("9606", r["species"])
+        self.assertEqual("hgnc:10020", r["query"])
 
 
 @unittest.skipUnless(TEST_URI, reason="No biolookup/test_uri configuration found")

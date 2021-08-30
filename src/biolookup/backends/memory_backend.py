@@ -16,7 +16,9 @@ class MemoryBackend(Backend):
 
     def __init__(
         self,
+        *,
         get_id_name_mapping,
+        get_id_species_mapping,
         get_alts_to_id,
         summarize_names: Optional[Callable[[], Mapping[str, Any]]],
         summarize_alts: Optional[Callable[[], Mapping[str, Any]]] = None,
@@ -26,6 +28,7 @@ class MemoryBackend(Backend):
         """Initialize the in-memory backend.
 
         :param get_id_name_mapping: A function for getting id-name mappings
+        :param get_id_species_mapping: A function for getting id-species mappings
         :param get_alts_to_id: A function for getting alts-id mappings
         :param summarize_names: A function for summarizing references
         :param summarize_alts: A function for summarizing alts
@@ -33,6 +36,7 @@ class MemoryBackend(Backend):
         :param get_id_definition_mapping: A function for getting id-def mappings
         """
         self.get_id_name_mapping = get_id_name_mapping
+        self.get_id_species_mapping = get_id_species_mapping
         self.get_alts_to_id = get_alts_to_id
         self.get_id_definition_mapping = get_id_definition_mapping
         self._summarize_names = summarize_names
@@ -52,6 +56,11 @@ class MemoryBackend(Backend):
         """Get the name with the id/name getter."""
         id_name_mapping = self.get_id_name_mapping(prefix) or {}
         return id_name_mapping.get(identifier)
+
+    def get_species(self, prefix: str, identifier: str) -> Optional[str]:
+        """Get the species with the id/species getter."""
+        id_species_mapping = self.get_id_species_mapping(prefix) or {}
+        return id_species_mapping.get(identifier)
 
     def get_definition(self, prefix: str, identifier: str) -> Optional[str]:
         """Get the name with the id/definition getter, if available."""

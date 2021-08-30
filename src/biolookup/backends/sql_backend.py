@@ -12,7 +12,13 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 
 from .backend import Backend
-from ..constants import ALTS_TABLE_NAME, DEFS_TABLE_NAME, REFS_TABLE_NAME, get_sqlalchemy_uri
+from ..constants import (
+    ALTS_TABLE_NAME,
+    DEFS_TABLE_NAME,
+    REFS_TABLE_NAME,
+    SPECIES_TABLE_NAME,
+    get_sqlalchemy_uri,
+)
 
 __all__ = [
     "RawSQLBackend",
@@ -42,6 +48,7 @@ class RawSQLBackend(Backend):
         refs_table: Optional[str] = None,
         alts_table: Optional[str] = None,
         defs_table: Optional[str] = None,
+        species_table: Optional[str] = None,
         engine: Union[None, str, Engine] = None,
     ):
         """Initialize the raw SQL backend.
@@ -49,6 +56,7 @@ class RawSQLBackend(Backend):
         :param refs_table: A name for the references (prefix-id-name) table. Defaults to 'obo_reference'
         :param alts_table: A name for the alts (prefix-id-alt) table. Defaults to 'obo_alt'
         :param defs_table: A name for the defs (prefix-id-def) table. Defaults to 'obo_def'
+        :param species_table: A name for the defs (prefix-id-species) table. Defaults to 'obo_species'
         :param engine: An engine, connection string, or None if you want the default.
         """
         self.engine = _ensure_engine(engine)
@@ -56,6 +64,7 @@ class RawSQLBackend(Backend):
         self.refs_table = refs_table or REFS_TABLE_NAME
         self.alts_table = alts_table or ALTS_TABLE_NAME
         self.defs_table = defs_table or DEFS_TABLE_NAME
+        self.species_table = species_table or SPECIES_TABLE_NAME
 
     @lru_cache(maxsize=1)
     def count_names(self) -> int:
@@ -138,6 +147,10 @@ class RawSQLBackend(Backend):
     def get_name(self, prefix: str, identifier: str) -> Optional[str]:
         """Get the name with a SQL query to the names table."""
         return self._help_one(self.refs_table, "name", prefix, identifier)
+
+    def get_species(self, prefix: str, identifier: str) -> Optional[str]:
+        """Get the species with a SQL query to the species table."""
+        return self._help_one(self.species_table, "species", prefix, identifier)
 
     def get_definition(self, prefix: str, identifier: str) -> Optional[str]:
         """Get the definition with a SQL query to the definitions table."""

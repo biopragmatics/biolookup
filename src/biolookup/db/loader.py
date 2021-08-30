@@ -19,12 +19,18 @@ from typing import Optional, Union
 
 import click
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
-from pyobo.resource_utils import ensure_alts, ensure_definitions, ensure_ooh_na_na
+from pyobo.resource_utils import ensure_alts, ensure_definitions, ensure_ooh_na_na, ensure_species
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from tabulate import tabulate
 
-from ..constants import ALTS_TABLE_NAME, DEFS_TABLE_NAME, REFS_TABLE_NAME, get_sqlalchemy_uri
+from ..constants import (
+    ALTS_TABLE_NAME,
+    DEFS_TABLE_NAME,
+    REFS_TABLE_NAME,
+    SPECIES_TABLE_NAME,
+    get_sqlalchemy_uri,
+)
 
 __all__ = [
     "load",
@@ -48,9 +54,11 @@ def load(
     refs_path: Union[None, str, Path] = None,
     alts_path: Union[None, str, Path] = None,
     defs_path: Union[None, str, Path] = None,
+    species_path: Union[None, str, Path] = None,
     refs_table: Optional[str] = None,
     alts_table: Optional[str] = None,
     defs_table: Optional[str] = None,
+    species_table: Optional[str] = None,
     test: bool = False,
     uri: Optional[str] = None,
 ) -> None:
@@ -62,6 +70,8 @@ def load(
     :param alts_path: Path to the alts table data
     :param defs_table: Name of the definitions table
     :param defs_path: Path to the definitions table data
+    :param species_table: Name of the species table
+    :param species_path: Path to the species table data
     :param test: Should only a test set of rows be uploaded? Defaults to false.
     :param uri: The URI of the database to connect to.
     """
@@ -72,9 +82,12 @@ def load(
         refs_table = REFS_TABLE_NAME
     if defs_table is None:
         defs_table = DEFS_TABLE_NAME
+    if species_table is None:
+        species_table = SPECIES_TABLE_NAME
     _load_alts(engine=engine, table=alts_table, path=alts_path, test=test)
     _load_definition(engine=engine, table=defs_table, path=defs_path, test=test)
     _load_name(engine=engine, table=refs_table, path=refs_path, test=test)
+    _load_species(engine=engine, table=species_table, path=species_path, test=test)
 
 
 def _load_alts(
@@ -112,6 +125,24 @@ def _load_definition(
         test=test,
         target_col="definition",
         use_varchar=False,
+    )
+
+
+def _load_species(
+    *,
+    engine: Union[None, str, Engine] = None,
+    table: Optional[str] = None,
+    path: Union[None, str, Path] = None,
+    test: bool = False,
+):
+    engine = _ensure_engine(engine)
+    _load_table(
+        engine=engine,
+        table=table or SPECIES_TABLE_NAME,
+        path=path if path else ensure_species(),
+        test=test,
+        target_col="species",
+        target_col_size=16,
     )
 
 
