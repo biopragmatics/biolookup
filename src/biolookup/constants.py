@@ -5,6 +5,7 @@
 import pystow
 
 REFS_TABLE_NAME = "obo_reference"
+SPECIES_TABLE_NAME = "obo_species"
 ALTS_TABLE_NAME = "obo_alt"
 DEFS_TABLE_NAME = "obo_def"
 
