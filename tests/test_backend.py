@@ -113,9 +113,6 @@ class TestRawSQLBackend(BackendTestCase):
         self.refs_table = "refs"
         self.alts_table = "alts"
         self.defs_table = "defs"
-
-    def test_load(self):
-        """Test loading the database."""
         with tempfile.TemporaryDirectory() as directory:
             directory = Path(directory)
             refs_path = directory / "refs.tsv.gz"
@@ -133,14 +130,17 @@ class TestRawSQLBackend(BackendTestCase):
                 alts_table=self.alts_table,
                 defs_table=self.defs_table,
             )
-            backend = get_backend(
+            self.backend = get_backend(
                 sql=True,
                 uri=TEST_URI,
                 refs_table=self.refs_table,
                 alts_table=self.alts_table,
                 defs_table=self.defs_table,
             )
-            self.help_check(backend, counts=self.counts)
+
+    def test_backend(self):
+        """Test the raw SQL backend."""
+        self.help_check(self.backend, counts=self.counts)
 
 
 class TestMemoryBackend(BackendTestCase):
@@ -151,10 +151,10 @@ class TestMemoryBackend(BackendTestCase):
 
     def setUp(self) -> None:
         """Prepare the in-memory backend."""
-        # Pre-load GO
+        # TODO rather than pre-loading GO, use mocks
         _ = pyobo.get_id_name_mapping("go", strict=False)
         self.backend = get_backend(lazy=True)
 
-    def test_memory_backend(self):
+    def test_backend(self):
         """Test the in-memory backend."""
         self.help_check(self.backend, counts=self.counts)
