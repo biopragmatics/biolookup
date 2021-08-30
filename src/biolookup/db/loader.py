@@ -17,13 +17,19 @@ from textwrap import dedent
 from typing import Optional, Union
 
 import click
-from pyobo.resource_utils import ensure_alts, ensure_definitions, ensure_ooh_na_na, ensure_species
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+from pyobo.resource_utils import ensure_alts, ensure_definitions, ensure_ooh_na_na, ensure_species
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from tabulate import tabulate
 
-from ..constants import ALTS_TABLE_NAME, DEFS_TABLE_NAME, REFS_TABLE_NAME, SPECIES_TABLE_NAME, get_sqlalchemy_uri
+from ..constants import (
+    ALTS_TABLE_NAME,
+    DEFS_TABLE_NAME,
+    REFS_TABLE_NAME,
+    SPECIES_TABLE_NAME,
+    get_sqlalchemy_uri,
+)
 
 __all__ = [
     "load",
@@ -63,6 +69,8 @@ def load(
     :param alts_path: Path to the alts table data
     :param defs_table: Name of the definitions table
     :param defs_path: Path to the definitions table data
+    :param species_table: Name of the species table
+    :param species_path: Path to the species table data
     :param test: Should only a test set of rows be uploaded? Defaults to false.
     :param uri: The URI of the database to connect to.
     """

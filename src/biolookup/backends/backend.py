@@ -28,6 +28,10 @@ class Backend:
         """Get the canonical/preferred (english) name for the identifier in the given resource."""
         raise NotImplementedError
 
+    def get_species(self, prefix: str, identifier: str) -> Optional[str]:
+        """Get the species for the prefix/identifier if it is species-specific."""
+        raise NotImplementedError
+
     def get_definition(self, prefix: str, identifier: str) -> Optional[str]:
         """Get the definition associated with the prefix/identifier."""
         raise NotImplementedError
@@ -120,6 +124,9 @@ class Backend:
         definition = self.get_definition(prefix, identifier)
         if definition:
             rv["definition"] = definition
+        species = self.get_species(prefix, identifier)
+        if species:
+            rv["species"] = species
 
         return rv
 

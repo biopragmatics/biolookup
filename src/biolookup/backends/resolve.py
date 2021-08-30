@@ -23,15 +23,18 @@ logger = logging.getLogger(__name__)
 
 
 def get_backend(
+    *,
     name_data: Union[None, str, pd.DataFrame] = None,
     alts_data: Union[None, str, pd.DataFrame] = None,
     defs_data: Union[None, str, pd.DataFrame] = None,
+    species_data: Union[None, str, pd.DataFrame] = None,
     lazy: bool = False,
     sql: bool = False,
     uri: Optional[str] = None,
     refs_table: Optional[str] = None,
     alts_table: Optional[str] = None,
     defs_table: Optional[str] = None,
+    species_table: Optional[str] = None,
 ) -> Backend:
     """Get the backend based on the input data."""
     if sql:
@@ -55,6 +58,23 @@ def get_backend(
         name_lookup = _get_lookup_from_df(name_data, desc="Processing names from dataframe")
     else:
         raise TypeError(f"invalid type for `name_data`: {name_data}")
+
+    if lazy:
+        species_lookup = None
+    elif isinstance(species_data, str):
+        species_lookup = _get_lookup_from_path(
+            species_data, desc=f"Processing species from {species_data}"
+        )
+    elif species_data is None:
+        from pyobo.resource_utils import ensure_species
+
+        species_lookup = _get_lookup_from_path(
+            ensure_species(), desc="Processing species from zenodo"
+        )
+    elif isinstance(species_data, pd.DataFrame):
+        species_lookup = _get_lookup_from_df(species_data, desc="Processing species from dataframe")
+    else:
+        raise TypeError(f"invalid type for `species_data`: {species_data}")
 
     if lazy:
         alts_lookup = None
@@ -88,6 +108,7 @@ def get_backend(
         name_lookup=name_lookup,
         alts_lookup=alts_lookup,
         defs_lookup=defs_lookup,
+        species_lookup=species_lookup,
     )
 
 
@@ -121,10 +142,12 @@ def _prepare_backend_with_lookup(
     name_lookup: Optional[Mapping[str, Mapping[str, str]]] = None,
     alts_lookup: Optional[Mapping[str, Mapping[str, str]]] = None,
     defs_lookup: Optional[Mapping[str, Mapping[str, str]]] = None,
+    species_lookup: Optional[Mapping[str, Mapping[str, str]]] = None,
 ) -> Backend:
     import pyobo
 
     get_id_name_mapping, summarize_names = _h(name_lookup, pyobo.get_id_name_mapping)
+    get_id_species_mapping, _ = _h(species_lookup, pyobo.get_id_species_mapping)
     get_alts_to_id, summarize_alts = _h(alts_lookup, pyobo.get_alts_to_id)
     get_id_definition_mapping, summarize_definitions = _h(
         defs_lookup, pyobo.get_id_definition_mapping
@@ -132,6 +155,7 @@ def _prepare_backend_with_lookup(
 
     return MemoryBackend(
         get_id_name_mapping=get_id_name_mapping,
+        get_id_species_mapping=get_id_species_mapping,
         get_alts_to_id=get_alts_to_id,
         get_id_definition_mapping=get_id_definition_mapping,
         summarize_names=summarize_names,
