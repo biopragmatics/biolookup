@@ -48,6 +48,7 @@ class TestDatabase(unittest.TestCase):
     """Tests for the database."""
 
     def setUp(self) -> None:
+        """Set up the test case."""
         self.refs_table = "refs"
         self.alts_table = "alts"
         self.defs_table = "defs"
