@@ -23,7 +23,9 @@ def _get_default_backend(remote_fallback: bool = True) -> Backend:
     if uri is not None:
         return RawSQLBackend(uri)
     if remote_fallback:
-        logger.debug("no connection to BIOLOOKUP_SQLALCHEMY_URI found, defaulting to remote backend")
+        logger.debug(
+            "no connection to BIOLOOKUP_SQLALCHEMY_URI found, defaulting to remote backend"
+        )
         return RemoteBackend()
     raise RuntimeError(
         "could not get default backend since BIOLOOKUP_SQLALCHEMY_URI"

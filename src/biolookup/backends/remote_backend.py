@@ -39,5 +39,5 @@ def _main():
     print(backend.lookup("doid:14330"))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     _main()
