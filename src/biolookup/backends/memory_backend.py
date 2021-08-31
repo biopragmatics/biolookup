@@ -34,6 +34,7 @@ class MemoryBackend(Backend):
         :param summarize_names: A function for summarizing references
         :param summarize_alts: A function for summarizing alts
         :param summarize_definitions: A function for summarizing definitions
+        :param summarize_species: A function for summarizing species
         :param get_id_definition_mapping: A function for getting id-def mappings
         """
         self.get_id_name_mapping = get_id_name_mapping
