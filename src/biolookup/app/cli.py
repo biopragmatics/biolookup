@@ -10,7 +10,7 @@ import sys
 from typing import Optional
 
 import click
-from more_click import host_option, port_option, run_app, verbose_option, with_gunicorn_option
+from more_click import host_option, port_option, run_app, verbose_option, with_gunicorn_option, debug_option
 
 from ..constants import MODULE
 
@@ -41,6 +41,7 @@ LOG_PATH = MODULE.join(name="log.txt")
 @click.option("--workers", type=int, help="number of workers to use in --gunicorn mode")
 @with_gunicorn_option
 @verbose_option
+@debug_option
 def web(
     port: str,
     host: str,
@@ -56,6 +57,7 @@ def web(
     with_gunicorn: bool,
     lazy: bool,
     workers: int,
+    debug: bool,
 ):
     """Run the Biolookup Service."""
     if test:
@@ -128,7 +130,7 @@ def web(
     wsgi.logger.setLevel(logging.DEBUG)
     wsgi.logger.addHandler(fh)
 
-    run_app(app=app, host=host, port=port, with_gunicorn=with_gunicorn, workers=workers)
+    run_app(app=app, host=host, port=port, with_gunicorn=with_gunicorn, workers=workers, debug=debug)
 
 
 if __name__ == "__main__":

@@ -55,6 +55,16 @@ assert res["definition"] is not None  # not shown for brevity
 The [INDRA Lab](https://indralab.github.io) hosts an instance of the Biolookup Service at 
 http://biolookup.io, so you can alternatively use `http://biolookup.io/lookup/doid:14330`.
 
+If you have a connection string for the database, you can directly access it via:
+
+```python
+from biolookup.backends import get_backend
+
+backend = get_backend(sql=True, uri=...)
+res = backend.resolve("doid:14330")
+# Same as above example
+```
+
 ### 🕸️ Running the Lookup App
 
 You can run the lookup app in local mode with:

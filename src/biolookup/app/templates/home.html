@@ -1,5 +1,14 @@
 {% extends "base.html" %}
 
+{% block styles %}
+    {{ super() }}
+    <style>
+        .stats div h2 {
+            margin-bottom: 0;
+        }
+    </style>
+{% endblock %}
+
 {% block container %}
     <div class="card card-body bg-light">
         <h1 class="display-3">Biolookup Service</h1>
@@ -9,41 +18,35 @@
         </p>
         <div class="card-body">
             {% if name_count %}
-                <div class="row text-center">
+                <div class="row text-center stats">
                     <div class="col">
-                        <div class="counter">
-                            <i class="fa fa-database"></i>
-                            <h2 class="count-prefixes" data-from="0" data-to="{{ prefix_count }}" data-time="1000"></h2>
-                            <p class="count-text ">Resources</p>
-                        </div>
+                        <i class="fa fa-database"></i>
+                        <h2 class="count-prefixes" data-from="0" data-to="{{ prefix_count }}" data-time="1000"></h2>
+                        <p class="count-text ">Resources</p>
                     </div>
                     <div class="col">
-                        <div class="counter">
-                            <i class="fa fa-signature"></i>
-                            <h2 class="count-names" data-to="{{ name_count }}" data-time="1000"></h2>
-                            <p class="count-text ">Names</p>
-                        </div>
+                        <i class="fa fa-signature"></i>
+                        <h2><span class="count-names" data-to="{{ name_count }}"
+                                  data-time="1000"></span>{{ name_suffix }}</h2>
+                        <p class="count-text ">Names</p>
                     </div>
                     <div class="col">
-                        <div class="counter">
-                            <i class="fa fa-sync-alt"></i>
-                            <h2 class="count-alts" data-to="{{ alts_count }}" data-time="1000"></h2>
-                            <p class="count-text ">Alternative Identifiers</p>
-                        </div>
+                        <i class="fa fa-sync-alt"></i>
+                        <h2><span class="count-alts" data-to="{{ alts_count }}"
+                                  data-time="1000"></span>{{ alts_suffix }}</h2>
+                        <p class="count-text ">Alternative IDs</p>
                     </div>
                     <div class="col">
-                        <div class="counter">
-                            <i class="fa fa-info-circle"></i>
-                            <h2 class="count-defs" data-to="{{ definition_count }}" data-time="1000"></h2>
-                            <p class="count-text">Definitions</p>
-                        </div>
+                        <i class="fa fa-book"></i>
+                        <h2><span class="count-defs" data-to="{{ definition_count }}"
+                                  data-time="1000"></span>{{ definition_suffix }}</h2>
+                        <p>Definitions</p>
                     </div>
                     <div class="col">
-                        <div class="counter">
-                            <i class="fa fa-info-circle"></i>
-                            <h2 class="count-defs" data-to="{{ species_count }}" data-time="1000"></h2>
-                            <p class="count-text">Species</p>
-                        </div>
+                        <i class="fa fa-paw"></i>
+                        <h2><span class="count-species" data-to="{{ species_count }}"
+                                  data-time="1000"></span>{{ species_suffix }}</h2>
+                        <p>Species</p>
                     </div>
                 </div>
             {% endif %}
@@ -114,7 +117,7 @@
                     time = parseInt($this.attr('data-time')),
                     changeTime = 10;
 
-                let currentNumber = numberFrom,
+                let currentNumber = 0,
                     value = delta * changeTime / time;
                 var interval1;
                 const changeNumber = () => {
@@ -134,6 +137,7 @@
             $('.count-names').counter();
             $('.count-alts').counter();
             $('.count-defs').counter();
+            $('.count-species').counter();
         });
     </script>
 {% endblock %}

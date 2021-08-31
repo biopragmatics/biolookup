@@ -12,7 +12,6 @@ import pandas as pd
 from flasgger import Swagger
 from flask import Blueprint, Flask, render_template
 from flask_bootstrap import Bootstrap
-from humanize import intcomma
 
 from .blueprints import biolookup_blueprint
 from .proxies import backend
@@ -23,16 +22,39 @@ logger = logging.getLogger(__name__)
 ui = Blueprint("ui", __name__)
 
 
+def _figure_number(n):
+    if n > 1_000_000:
+        lead = n / 1_000_000
+        if lead < 10:
+            return round(lead, 1), "M"
+        else:
+            return round(lead), "M"
+    if n > 1_000:
+        lead = n / 1_000
+        if lead < 10:
+            return round(lead, 1), "K"
+        else:
+            return round(lead), "K"
+
+
 @ui.route("/")
 def home():
     """Serve the home page."""
+    name_count, name_suffix = _figure_number(backend.count_names())
+    alts_count, alts_suffix = _figure_number(backend.count_alts())
+    defs_count, defs_suffix = _figure_number(backend.count_definitions())
+    species_count, species_suffix = _figure_number(backend.count_species())
     return render_template(
         "home.html",
-        name_count=backend.count_names(),
-        alts_count=backend.count_alts(),
+        name_count=name_count,
+        name_suffix=name_suffix,
+        alts_count=alts_count,
+        alts_suffix=alts_suffix,
         prefix_count=backend.count_prefixes(),
-        definition_count=backend.count_definitions(),
-        species_count=backend.count_species(),
+        definition_count=defs_count,
+        definition_suffix=defs_suffix,
+        species_count=species_count,
+        species_suffix=species_suffix,
     )
 
 
@@ -43,6 +65,18 @@ def summary():
         "summary.html",
         summary_df=backend.summary_df(),
     )
+
+
+@ui.route("/downloads")
+def downloads():
+    """Serve the downloads page."""
+    return render_template("meta/download.html")
+
+
+@ui.route("/usage")
+def usage():
+    """Serve the usage page."""
+    return render_template("meta/access.html")
 
 
 @ui.route("/entity/<curie>")
