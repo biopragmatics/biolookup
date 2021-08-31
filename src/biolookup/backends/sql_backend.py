@@ -92,6 +92,12 @@ class RawSQLBackend(Backend):
         )
 
     @lru_cache(maxsize=1)
+    def count_species(self) -> Optional[int]:
+        """Count species using a SQL query to the alts summary table."""
+        logger.info("counting species")
+        return self._get_one(f"SELECT COUNT(*) FROM {self.species_table}_summary;")  # noqa:S608
+
+    @lru_cache(maxsize=1)
     def count_alts(self) -> Optional[int]:
         """Count alts using a SQL query to the alts summary table."""
         logger.info("counting alts")
