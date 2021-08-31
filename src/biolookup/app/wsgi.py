@@ -16,7 +16,7 @@ from humanize import intcomma
 
 from .blueprints import biolookup_blueprint
 from .proxies import backend
-from ..backends import get_backend
+from ..backends import Backend, get_backend
 
 logger = logging.getLogger(__name__)
 
@@ -80,6 +80,24 @@ def get_app(
     :param species_table: Name of the species table in the SQL database
     :return: A pre-built flask app.
     """
+    backend = get_backend(
+        name_data=name_data,
+        alts_data=alts_data,
+        defs_data=defs_data,
+        species_data=species_data,
+        lazy=lazy,
+        sql=sql,
+        uri=uri,
+        refs_table=refs_table,
+        alts_table=alts_table,
+        defs_table=defs_table,
+        species_table=species_table,
+    )
+    return get_app_from_backend(backend)
+
+
+def get_app_from_backend(backend: Backend) -> Flask:
+    """Build a flask app."""
     app = Flask(__name__)
     Swagger(
         app,
@@ -95,19 +113,7 @@ def get_app(
     )
     Bootstrap(app)
 
-    app.config["resolver_backend"] = get_backend(
-        name_data=name_data,
-        alts_data=alts_data,
-        defs_data=defs_data,
-        species_data=species_data,
-        lazy=lazy,
-        sql=sql,
-        uri=uri,
-        refs_table=refs_table,
-        alts_table=alts_table,
-        defs_table=defs_table,
-        species_table=species_table,
-    )
+    app.config["resolver_backend"] = backend
     app.register_blueprint(ui)
     app.register_blueprint(biolookup_blueprint)
 

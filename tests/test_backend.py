@@ -12,7 +12,7 @@ import pyobo
 import pystow
 from flask import Flask
 
-from biolookup.app.wsgi import get_app
+from biolookup.app.wsgi import get_app_from_backend
 from biolookup.backends import Backend, MemoryBackend, RawSQLBackend, get_backend
 from biolookup.db import loader
 
@@ -188,14 +188,7 @@ class TestRawSQLBackend(BackendTestCase):
 
     def test_app(self):
         """Test the app works properly."""
-        app = get_app(
-            sql=True,
-            uri=TEST_URI,
-            refs_table=self.refs_table,
-            alts_table=self.alts_table,
-            defs_table=self.defs_table,
-            species_table=self.species_table,
-        )
+        app = get_app_from_backend(self.backend)
         self.assert_app_lookup(app)
 
 
@@ -217,5 +210,5 @@ class TestMemoryBackend(BackendTestCase):
 
     def test_app(self):
         """Test the app works properly."""
-        app = get_app(lazy=True)
+        app = get_app_from_backend(self.backend)
         self.assert_app_lookup(app)
