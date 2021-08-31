@@ -10,7 +10,9 @@ from typing import ClassVar, Type
 
 import pyobo
 import pystow
+from flask import Flask
 
+from biolookup.app.wsgi import get_app_from_backend
 from biolookup.backends import Backend, MemoryBackend, RawSQLBackend, get_backend
 from biolookup.db import loader
 
@@ -101,12 +103,7 @@ class BackendTestCase(unittest.TestCase):
         self.assertIsNone(backend.get_definition("go", "0030475"))
 
         r = backend.lookup("go:0000073")
-        self.assertEqual("go", r["prefix"])
-        self.assertEqual("0000073", r["identifier"])
-        self.assertEqual("initial mitotic spindle pole body separation", r["name"])
-        self.assertEqual(DEF_1, r["definition"])
-        self.assertEqual("go:0000073", r["query"])
-        self.assertNotIn("species", r)
+        self.assert_go_example(r)
 
         r = backend.lookup("go:0030475")
         self.assertEqual("go", r["prefix"])
@@ -124,6 +121,22 @@ class BackendTestCase(unittest.TestCase):
         self.assertEqual(DEF_2, r["definition"])
         self.assertEqual("9606", r["species"])
         self.assertEqual("hgnc:10020", r["query"])
+
+    def assert_go_example(self, r):
+        """Run test of the canonical GO example."""
+        self.assertEqual("go", r["prefix"])
+        self.assertEqual("0000073", r["identifier"])
+        self.assertEqual("initial mitotic spindle pole body separation", r["name"])
+        self.assertEqual(DEF_1, r["definition"])
+        self.assertEqual("go:0000073", r["query"])
+        self.assertNotIn("species", r)
+
+    def assert_app_lookup(self, app: Flask):
+        """Run the test on looking up the canonical GO example."""
+        with app.test_client() as client:
+            res = client.get("/resolve/go:0000073")
+            self.assertIsNotNone(res)
+            self.assert_go_example(res.json)
 
 
 @unittest.skipUnless(TEST_URI, reason="No biolookup/test_uri configuration found")
@@ -173,6 +186,11 @@ class TestRawSQLBackend(BackendTestCase):
         """Test the raw SQL backend."""
         self.help_check(self.backend, counts=self.counts)
 
+    def test_app(self):
+        """Test the app works properly."""
+        app = get_app_from_backend(self.backend)
+        self.assert_app_lookup(app)
+
 
 class TestMemoryBackend(BackendTestCase):
     """Tests for the in-memory backend."""
@@ -189,3 +207,8 @@ class TestMemoryBackend(BackendTestCase):
     def test_backend(self):
         """Test the in-memory backend."""
         self.help_check(self.backend, counts=self.counts)
+
+    def test_app(self):
+        """Test the app works properly."""
+        app = get_app_from_backend(self.backend)
+        self.assert_app_lookup(app)
