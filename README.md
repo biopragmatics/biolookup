@@ -39,8 +39,8 @@ Get metadata and ontological information about biomedical entities.
 
 ### 🔍 Querying the Biolookup Service
 
-The Biolookup Service has an endpoint `/lookup/<curie>` for retrieving metadata
-and ontological information about a biomedical entity via its compact identifier (CURIE).
+The Biolookup Service has an endpoint `/lookup/<curie>` for retrieving metadata and ontological
+information about a biomedical entity via its compact identifier (CURIE).
 
 ```python
 import requests
@@ -52,7 +52,7 @@ assert res["prefix"] == "doid"
 assert res["definition"] is not None  # not shown for brevity
 ```
 
-The [INDRA Lab](https://indralab.github.io) hosts an instance of the Biolookup Service at 
+The [INDRA Lab](https://indralab.github.io) hosts an instance of the Biolookup Service at
 http://biolookup.io, so you can alternatively use `http://biolookup.io/lookup/doid:14330`.
 
 The same can be accomplished using the `biolookup` package:
