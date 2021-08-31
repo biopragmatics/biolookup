@@ -59,6 +59,7 @@ class RawSQLBackend(Backend):
         :param alts_table: A name for the alts (prefix-id-alt) table. Defaults to 'obo_alt'
         :param defs_table: A name for the defs (prefix-id-def) table. Defaults to 'obo_def'
         :param species_table: A name for the defs (prefix-id-species) table. Defaults to 'obo_species'
+        :param derived_table: A name for the prefix-id-... derived table.
         :param engine: An engine, connection string, or None if you want the default.
         """
         self.engine = _ensure_engine(engine)

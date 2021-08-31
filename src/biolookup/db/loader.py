@@ -74,6 +74,7 @@ def load(
     :param defs_path: Path to the definitions table data
     :param species_table: Name of the species table
     :param species_path: Path to the species table data
+    :param derived_table: Name of the prefix-id-... derived table.
     :param test: Should only a test set of rows be uploaded? Defaults to false.
     :param uri: The URI of the database to connect to.
     """
@@ -95,7 +96,8 @@ def load(
 
     # Use
     drop_derived = f"DROP TABLE IF EXISTS {derived_table} CASCADE;"
-    create_derived = dedent(f"""\
+    create_derived = dedent(
+        f"""\
         CREATE TABLE {derived_table} AS (
         SELECT r.prefix, r.identifier, r.name, d.definition, s.species
         FROM {refs_table} r
@@ -104,11 +106,14 @@ def load(
         LEFT JOIN {species_table} s on r.prefix = s.prefix
             and r.identifier = s.identifier
         )
-    """).rstrip()
-    pkey_statement = dedent(f"""
+    """  # noqa:S608
+    ).rstrip()
+    pkey_statement = dedent(
+        f"""
         ALTER TABLE {derived_table}
             ADD CONSTRAINT pk_{derived_table} PRIMARY KEY (prefix, identifier);
-    """).rstrip()
+    """
+    ).rstrip()
 
     with closing(engine.raw_connection()) as connection:
         with closing(connection.cursor()) as cursor:
