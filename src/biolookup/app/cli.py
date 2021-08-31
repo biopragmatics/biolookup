@@ -10,7 +10,14 @@ import sys
 from typing import Optional
 
 import click
-from more_click import host_option, port_option, run_app, verbose_option, with_gunicorn_option, debug_option
+from more_click import (
+    debug_option,
+    host_option,
+    port_option,
+    run_app,
+    verbose_option,
+    with_gunicorn_option,
+)
 
 from ..constants import MODULE
 
@@ -130,7 +137,9 @@ def web(
     wsgi.logger.setLevel(logging.DEBUG)
     wsgi.logger.addHandler(fh)
 
-    run_app(app=app, host=host, port=port, with_gunicorn=with_gunicorn, workers=workers, debug=debug)
+    run_app(
+        app=app, host=host, port=port, with_gunicorn=with_gunicorn, workers=workers, debug=debug
+    )
 
 
 if __name__ == "__main__":
