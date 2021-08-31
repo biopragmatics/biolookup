@@ -23,6 +23,7 @@ class MemoryBackend(Backend):
         summarize_names: Optional[Callable[[], Mapping[str, Any]]],
         summarize_alts: Optional[Callable[[], Mapping[str, Any]]] = None,
         summarize_definitions: Optional[Callable[[], Mapping[str, Any]]] = None,
+        summarize_species: Optional[Callable[[], Mapping[str, Any]]] = None,
         get_id_definition_mapping=None,
     ) -> None:
         """Initialize the in-memory backend.
@@ -33,6 +34,7 @@ class MemoryBackend(Backend):
         :param summarize_names: A function for summarizing references
         :param summarize_alts: A function for summarizing alts
         :param summarize_definitions: A function for summarizing definitions
+        :param summarize_species: A function for summarizing species
         :param get_id_definition_mapping: A function for getting id-def mappings
         """
         self.get_id_name_mapping = get_id_name_mapping
@@ -42,6 +44,7 @@ class MemoryBackend(Backend):
         self._summarize_names = summarize_names
         self._summarize_alts = summarize_alts
         self._summarize_definitions = summarize_definitions
+        self._summarize_species = summarize_species
 
     def has_prefix(self, prefix: str) -> bool:
         """Check for the prefix using the id/name getter."""
@@ -102,3 +105,13 @@ class MemoryBackend(Backend):
     def count_definitions(self) -> int:
         """Count definitions using the definition summary."""
         return sum(self.summarize_definitions().values())
+
+    def summarize_species(self) -> Mapping[str, Any]:
+        """Summarize the species with the internal species summary function, if available."""
+        if self._summarize_species is None:
+            return {}
+        return self._summarize_species()
+
+    def count_species(self) -> int:
+        """Count species using the species summary."""
+        return sum(self.summarize_species().values())

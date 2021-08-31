@@ -72,10 +72,14 @@ class BackendTestCase(unittest.TestCase):
             self.assertEqual(6, backend.count_names())
             self.assertEqual(5, backend.count_definitions())
             self.assertEqual(1, backend.count_alts())
+            self.assertEqual(3, backend.count_species(), msg="Got wrong number of species")
 
             self.assertEqual({"go": 3, "hgnc": 3}, dict(backend.summarize_names()))
             self.assertEqual({"go": 3, "hgnc": 2}, dict(backend.summarize_definitions()))
             self.assertEqual({"go": 1}, dict(backend.summarize_alts()))
+            self.assertEqual(
+                {"hgnc": 3}, dict(backend.summarize_species()), msg="Wrong species summary"
+            )
 
         # Test name lookup
         self.assertEqual(
@@ -134,22 +138,27 @@ class TestRawSQLBackend(BackendTestCase):
         self.refs_table = "refs"
         self.alts_table = "alts"
         self.defs_table = "defs"
+        self.species_table = "species"
         with tempfile.TemporaryDirectory() as directory:
             directory = Path(directory)
             refs_path = directory / "refs.tsv.gz"
             alts_path = directory / "alts.tsv.gz"
             defs_path = directory / "defs.tsv.gz"
+            species_path = directory / "species.tsv.gz"
             _write(refs_path, REFS, "name")
             _write(alts_path, ALTS, "alt")
             _write(defs_path, DEFS, "definition")
+            _write(species_path, SPECIES, "species")
             loader.load(
                 uri=TEST_URI,
                 refs_path=refs_path,
                 alts_path=alts_path,
                 defs_path=defs_path,
+                species_path=species_path,
                 refs_table=self.refs_table,
                 alts_table=self.alts_table,
                 defs_table=self.defs_table,
+                species_table=self.species_table,
             )
             self.backend = get_backend(
                 sql=True,
@@ -157,6 +166,7 @@ class TestRawSQLBackend(BackendTestCase):
                 refs_table=self.refs_table,
                 alts_table=self.alts_table,
                 defs_table=self.defs_table,
+                species_table=self.species_table,
             )
 
     def test_backend(self):
