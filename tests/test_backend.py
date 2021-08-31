@@ -100,7 +100,7 @@ class BackendTestCase(unittest.TestCase):
         self.assertIsNone(backend.get_name("go", "0030475"))
         self.assertIsNone(backend.get_definition("go", "0030475"))
 
-        r = backend.resolve("go:0000073")
+        r = backend.lookup("go:0000073")
         self.assertEqual("go", r["prefix"])
         self.assertEqual("0000073", r["identifier"])
         self.assertEqual("initial mitotic spindle pole body separation", r["name"])
@@ -108,7 +108,7 @@ class BackendTestCase(unittest.TestCase):
         self.assertEqual("go:0000073", r["query"])
         self.assertNotIn("species", r)
 
-        r = backend.resolve("go:0030475")
+        r = backend.lookup("go:0030475")
         self.assertEqual("go", r["prefix"])
         self.assertEqual("0000073", r["identifier"])
         self.assertEqual("initial mitotic spindle pole body separation", r["name"])
@@ -117,7 +117,7 @@ class BackendTestCase(unittest.TestCase):
         self.assertNotIn("species", r)
 
         # Extra test to check species
-        r = backend.resolve("hgnc:10020")
+        r = backend.lookup("hgnc:10020")
         self.assertEqual("hgnc", r["prefix"])
         self.assertEqual("10020", r["identifier"])
         self.assertEqual("RIPK2", r["name"])
