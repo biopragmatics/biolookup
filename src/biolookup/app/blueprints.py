@@ -43,7 +43,7 @@ def resolve(curie: str):
     """  # noqa:DAR101,DAR201
     logger.debug("resolving %s", curie)
     start = time.time()
-    rv = backend.resolve(curie)
+    rv = backend.lookup(curie)
     logger.debug("resolved %s in %.2f seconds", curie, time.time() - start)
     return jsonify(rv)
 

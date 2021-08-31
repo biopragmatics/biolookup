@@ -83,7 +83,7 @@ class Backend:
     def count_species(self) -> Optional[int]:
         """Count the number of species links in the database."""
 
-    def resolve(self, curie: str, resolve_alternate: bool = True) -> Mapping[str, Any]:
+    def lookup(self, curie: str, *, resolve_alternate: bool = True) -> Mapping[str, Any]:
         """Return the results and summary when resolving a CURIE string."""
         prefix, identifier = bioregistry.parse_curie(curie)
         if prefix is None or identifier is None:

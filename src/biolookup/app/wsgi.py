@@ -15,7 +15,7 @@ from flask_bootstrap import Bootstrap
 
 from .blueprints import biolookup_blueprint
 from .proxies import backend
-from ..backends import get_backend
+from ..backends import Backend, get_backend
 
 logger = logging.getLogger(__name__)
 
@@ -90,12 +90,14 @@ def get_app(
     name_data: Union[None, str, pd.DataFrame] = None,
     alts_data: Union[None, str, pd.DataFrame] = None,
     defs_data: Union[None, str, pd.DataFrame] = None,
+    species_data: Union[None, str, pd.DataFrame] = None,
     lazy: bool = False,
     sql: bool = False,
     uri: Optional[str] = None,
     refs_table: Optional[str] = None,
     alts_table: Optional[str] = None,
     defs_table: Optional[str] = None,
+    species_table: Optional[str] = None,
 ) -> Flask:
     """Build a flask app.
 
@@ -104,18 +106,40 @@ def get_app(
          identifier, and name and is a TSV.
     :param alts_data: If none, uses the internal PyOBO loader. If a string, assumes is a gzip and reads a
          dataframe from there. If a dataframe, uses it directly. Assumes data frame has 3 columns - prefix,
-         alt identifier, and identifier and is a TSV.
+         identifier, and alt identifier and is a TSV.
     :param defs_data: If none, uses the internal PyOBO loader. If a string, assumes is a gzip and reads a
          dataframe from there. If a dataframe, uses it directly. Assumes data frame has 3 columns - prefix,
-         identifier identifier, and definition and is a TSV.
+         identifier, and definition and is a TSV.
+    :param species_data: If none, uses the internal PyOBO loader. If a string, assumes is a gzip and reads a
+         dataframe from there. If a dataframe, uses it directly. Assumes data frame has 3 columns - prefix,
+         identifier, and species and is a TSV.
     :param lazy: don't load the full cache into memory to run
     :param sql: use a remote SQL database
     :param uri: If using a remote SQL database, specify a non-default connection string
     :param refs_table: Name of the reference table in the SQL database
     :param alts_table: Name of the alternative identifiers table in the SQL database
     :param defs_table: Name of the definitions table in the SQL database
+    :param species_table: Name of the species table in the SQL database
     :return: A pre-built flask app.
     """
+    backend = get_backend(
+        name_data=name_data,
+        alts_data=alts_data,
+        defs_data=defs_data,
+        species_data=species_data,
+        lazy=lazy,
+        sql=sql,
+        uri=uri,
+        refs_table=refs_table,
+        alts_table=alts_table,
+        defs_table=defs_table,
+        species_table=species_table,
+    )
+    return get_app_from_backend(backend)
+
+
+def get_app_from_backend(backend: Backend) -> Flask:
+    """Build a flask app."""
     app = Flask(__name__)
     Swagger(
         app,
@@ -131,17 +155,7 @@ def get_app(
     )
     Bootstrap(app)
 
-    app.config["resolver_backend"] = get_backend(
-        name_data=name_data,
-        alts_data=alts_data,
-        defs_data=defs_data,
-        lazy=lazy,
-        sql=sql,
-        uri=uri,
-        refs_table=refs_table,
-        alts_table=alts_table,
-        defs_table=defs_table,
-    )
+    app.config["resolver_backend"] = backend
     app.register_blueprint(ui)
     app.register_blueprint(biolookup_blueprint)
 

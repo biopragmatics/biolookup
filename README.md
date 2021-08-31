@@ -39,8 +39,8 @@ Get metadata and ontological information about biomedical entities.
 
 ### 🔍 Querying the Biolookup Service
 
-The Biolookup Service has an endpoint `/lookup/<curie>` for retrieving metadata
-and ontological information about a biomedical entity via its compact identifier (CURIE).
+The Biolookup Service has an endpoint `/lookup/<curie>` for retrieving metadata and ontological
+information about a biomedical entity via its compact identifier (CURIE).
 
 ```python
 import requests
@@ -52,18 +52,23 @@ assert res["prefix"] == "doid"
 assert res["definition"] is not None  # not shown for brevity
 ```
 
-The [INDRA Lab](https://indralab.github.io) hosts an instance of the Biolookup Service at 
+The [INDRA Lab](https://indralab.github.io) hosts an instance of the Biolookup Service at
 http://biolookup.io, so you can alternatively use `http://biolookup.io/lookup/doid:14330`.
 
-If you have a connection string for the database, you can directly access it via:
+The same can be accomplished using the `biolookup` package:
 
 ```python
-from biolookup.backends import get_backend
+import biolookup
 
-backend = get_backend(sql=True, uri=...)
-res = backend.resolve("doid:14330")
-# Same as above example
+res = biolookup.lookup("doid:14330")
+assert res["name"] == "Parkinson's disease"
+# ... same as before
 ```
+
+If you've configured the `BIOLOOKUP_SQLALCHEMY_URI` environment variable (or any other valid way
+with [`pystow`](https://github.com/cthoyt/pystow) to point directly at the database for an instance
+of the Biolookup Service, it will make a direct connection to the database instead of using the
+web-based API.
 
 ### 🕸️ Running the Lookup App
 

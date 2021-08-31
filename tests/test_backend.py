@@ -10,8 +10,11 @@ from typing import ClassVar, Type
 
 import pyobo
 import pystow
+from flask import Flask
 
+from biolookup.app.wsgi import get_app_from_backend
 from biolookup.backends import Backend, MemoryBackend, RawSQLBackend, get_backend
+from biolookup.constants import DEFAULT_ENDPOINT
 from biolookup.db import loader
 
 TEST_URI = pystow.get_config("biolookup", "test_uri")
@@ -100,15 +103,10 @@ class BackendTestCase(unittest.TestCase):
         self.assertIsNone(backend.get_name("go", "0030475"))
         self.assertIsNone(backend.get_definition("go", "0030475"))
 
-        r = backend.resolve("go:0000073")
-        self.assertEqual("go", r["prefix"])
-        self.assertEqual("0000073", r["identifier"])
-        self.assertEqual("initial mitotic spindle pole body separation", r["name"])
-        self.assertEqual(DEF_1, r["definition"])
-        self.assertEqual("go:0000073", r["query"])
-        self.assertNotIn("species", r)
+        r = backend.lookup("go:0000073")
+        self.assert_go_example(r)
 
-        r = backend.resolve("go:0030475")
+        r = backend.lookup("go:0030475")
         self.assertEqual("go", r["prefix"])
         self.assertEqual("0000073", r["identifier"])
         self.assertEqual("initial mitotic spindle pole body separation", r["name"])
@@ -117,13 +115,29 @@ class BackendTestCase(unittest.TestCase):
         self.assertNotIn("species", r)
 
         # Extra test to check species
-        r = backend.resolve("hgnc:10020")
+        r = backend.lookup("hgnc:10020")
         self.assertEqual("hgnc", r["prefix"])
         self.assertEqual("10020", r["identifier"])
         self.assertEqual("RIPK2", r["name"])
         self.assertEqual(DEF_2, r["definition"])
         self.assertEqual("9606", r["species"])
         self.assertEqual("hgnc:10020", r["query"])
+
+    def assert_go_example(self, r):
+        """Run test of the canonical GO example."""
+        self.assertEqual("go", r["prefix"])
+        self.assertEqual("0000073", r["identifier"])
+        self.assertEqual("initial mitotic spindle pole body separation", r["name"])
+        self.assertEqual(DEF_1, r["definition"])
+        self.assertEqual("go:0000073", r["query"])
+        self.assertNotIn("species", r)
+
+    def assert_app_lookup(self, app: Flask):
+        """Run the test on looking up the canonical GO example."""
+        with app.test_client() as client:
+            res = client.get(f"/{DEFAULT_ENDPOINT}/go:0000073")
+            self.assertIsNotNone(res)
+            self.assert_go_example(res.json)
 
 
 @unittest.skipUnless(TEST_URI, reason="No biolookup/test_uri configuration found")
@@ -173,6 +187,11 @@ class TestRawSQLBackend(BackendTestCase):
         """Test the raw SQL backend."""
         self.help_check(self.backend, counts=self.counts)
 
+    def test_app(self):
+        """Test the app works properly."""
+        app = get_app_from_backend(self.backend)
+        self.assert_app_lookup(app)
+
 
 class TestMemoryBackend(BackendTestCase):
     """Tests for the in-memory backend."""
@@ -189,3 +208,8 @@ class TestMemoryBackend(BackendTestCase):
     def test_backend(self):
         """Test the in-memory backend."""
         self.help_check(self.backend, counts=self.counts)
+
+    def test_app(self):
+        """Test the app works properly."""
+        app = get_app_from_backend(self.backend)
+        self.assert_app_lookup(app)
