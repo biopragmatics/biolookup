@@ -7,7 +7,7 @@ from typing import Any, Mapping, Optional
 import requests
 
 from .backend import Backend
-from ..constants import DEFAULT
+from ..constants import DEFAULT_ENDPOINT, DEFAULT_URL
 
 __all__ = [
     "RemoteBackend",
@@ -24,8 +24,8 @@ class RemoteBackend(Backend):
         :param endpoint: The endpoint name. Defaults to ``lookup``. This is configurable since
             some instances might mount the API differently.
         """
-        self.base_url = (base_url or DEFAULT).rstrip("/")
-        self.endpoint = (endpoint or "resolve").strip("/")
+        self.base_url = (base_url or DEFAULT_URL).rstrip("/")
+        self.endpoint = (endpoint or DEFAULT_ENDPOINT).strip("/")
 
     def lookup(self, curie: str, *, resolve_alternate: bool = True) -> Mapping[str, Any]:
         """Lookup the CURIE using the remote service."""

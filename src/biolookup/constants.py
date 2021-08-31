@@ -12,7 +12,8 @@ DERIVED_NAME = "entities"
 
 MODULE = pystow.module("biolookup")
 
-DEFAULT = "http://biolookup.io"
+DEFAULT_URL = "http://biolookup.io"
+DEFAULT_ENDPOINT = "lookup"
 
 
 def get_sqlalchemy_uri() -> str:

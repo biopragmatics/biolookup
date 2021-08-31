@@ -14,6 +14,7 @@ from flask import Flask
 
 from biolookup.app.wsgi import get_app_from_backend
 from biolookup.backends import Backend, MemoryBackend, RawSQLBackend, get_backend
+from biolookup.constants import DEFAULT_ENDPOINT
 from biolookup.db import loader
 
 TEST_URI = pystow.get_config("biolookup", "test_uri")
@@ -134,7 +135,7 @@ class BackendTestCase(unittest.TestCase):
     def assert_app_lookup(self, app: Flask):
         """Run the test on looking up the canonical GO example."""
         with app.test_client() as client:
-            res = client.get("/resolve/go:0000073")
+            res = client.get(f"/{DEFAULT_ENDPOINT}/go:0000073")
             self.assertIsNotNone(res)
             self.assert_go_example(res.json)
 
