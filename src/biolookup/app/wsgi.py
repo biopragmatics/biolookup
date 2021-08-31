@@ -28,10 +28,11 @@ def home():
     """Serve the home page."""
     return render_template(
         "home.html",
-        name_count=intcomma(backend.count_names()),
-        alts_count=intcomma(backend.count_alts()),
-        prefix_count=intcomma(backend.count_prefixes()),
-        definition_count=intcomma(backend.count_definitions()),
+        name_count=backend.count_names(),
+        alts_count=backend.count_alts(),
+        prefix_count=backend.count_prefixes(),
+        definition_count=backend.count_definitions(),
+        species_count=backend.count_species(),
     )
 
 
@@ -42,6 +43,13 @@ def summary():
         "summary.html",
         summary_df=backend.summary_df(),
     )
+
+
+@ui.route("/entity/<curie>")
+def entity(curie: str):
+    """Serve an entity page."""
+    res = backend.resolve(curie)
+    return render_template("entity.html", res=res)
 
 
 def get_app(

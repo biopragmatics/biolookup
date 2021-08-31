@@ -1,69 +1,139 @@
 {% extends "base.html" %}
 
-{% block content %}
-    <h5 class="card-header">Biolookup Service</h5>
-    <div class="card-body">
-        <p>
-            This service looks up for <a href="https://en.wikipedia.org/wiki/CURIE">CURIEs</a>
-            their labels, names, and builds provider URLs (like for Identifiers.org) when possible.
-            {% if name_count %}It currently covers {{ name_count }} names,
-                {{ alts_count }} alternate identifiers, and {{ definition_count }} definitions
-                across {{ prefix_count }} resources{% endif %}.
-            See also the <a href="{{ url_for(".summary") }}"> summary</a> and
-            <a href="{{ url_for("flasgger.apidocs") }}">Swagger docs</a>.
+{% block container %}
+    <div class="card card-body bg-light">
+        <h1 class="display-3">Biolookup Service</h1>
+        <p class="lead">
+            The Biolookup Service provides metadata and ontological information about biomedical
+            entities based on their <a href="https://en.wikipedia.org/wiki/CURIE">compact identifiers</a>.
         </p>
+        <div class="card-body">
+            {% if name_count %}
+                <div class="row text-center">
+                    <div class="col">
+                        <div class="counter">
+                            <i class="fa fa-database"></i>
+                            <h2 class="count-prefixes" data-from="0" data-to="{{ prefix_count }}" data-time="1000"></h2>
+                            <p class="count-text ">Resources</p>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="counter">
+                            <i class="fa fa-signature"></i>
+                            <h2 class="count-names" data-to="{{ name_count }}" data-time="1000"></h2>
+                            <p class="count-text ">Names</p>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="counter">
+                            <i class="fa fa-sync-alt"></i>
+                            <h2 class="count-alts" data-to="{{ alts_count }}" data-time="1000"></h2>
+                            <p class="count-text ">Alternative Identifiers</p>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="counter">
+                            <i class="fa fa-info-circle"></i>
+                            <h2 class="count-defs" data-to="{{ definition_count }}" data-time="1000"></h2>
+                            <p class="count-text">Definitions</p>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="counter">
+                            <i class="fa fa-info-circle"></i>
+                            <h2 class="count-defs" data-to="{{ species_count }}" data-time="1000"></h2>
+                            <p class="count-text">Species</p>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            <h5 class="card-title">Examples</h5>
+            <p>
+                It has a single endpoint <code>/resolve/&lt;curie&gt;</code> that gives back JSON.
+                Here are a few examples:
+            </p>
+        </div>
+        <table class="table">
+            <thead>
+            <tr>
+                <th scope="col">CURIE</th>
+                <th scope="col">Description</th>
+            </tr>
+            </thead>
+            <tr>
+                <td><a href="{{ url_for('biolookup.resolve', curie='DOID:14330' ) }}">DOID:14330</a></td>
+                <td>🟢 exact</td>
+            </tr>
+            <tr>
+                <td><a href="{{ url_for('biolookup.resolve', curie='doid:14330' ) }}">doid:14330</a></td>
+                <td>🟢 capitalization variant</td>
+            </tr>
+            <tr>
+                <td><a href="{{ url_for('biolookup.resolve', curie='DO:14330' ) }}">DO:14330</a></td>
+                <td>🟢 synonym identified in metaregistry</td>
+            </tr>
+            <tr>
+                <td><a href="{{ url_for('biolookup.resolve', curie='GO:0000501' ) }}">GO:0000501</a></td>
+                <td>🟢 secondary identifier mapped</td>
+            </tr>
+            <tr>
+                <td><a href="{{ url_for('biolookup.resolve', curie='GO:GO:0000501' ) }}">GO:GO:0000501</a></td>
+                <td>🟢 banana problem mapped</td>
+            </tr>
+            <tr>
+                <td><a href="{{ url_for('biolookup.resolve', curie='APO:0000155' ) }}">apo:0000155</a></td>
+                <td>🟡 able to look up name, but prefix is not listed on Identifiers.org</td>
+            </tr>
+            <tr>
+                <td><a href="{{ url_for('biolookup.resolve', curie='wikidata:Q11085' ) }}">wikidata:Q11085</a></td>
+                <td>🟡 able to generate Identifiers.org link, but name unavailable</td>
+            </tr>
+            <tr>
+                <td><a href="{{ url_for('biolookup.resolve', curie='DOID:00000' ) }}">DOID:00000</a></td>
+                <td>🔴 valid prefix, but invalid identifier</td>
+            </tr>
+            <tr>
+                <td><a href="{{ url_for('biolookup.resolve', curie='NNN:00000' ) }}">NNN:00000</a></td>
+                <td>🔴 invalid prefix</td>
+            </tr>
+        </table>
+    </div>
+{% endblock %}
 
-        <h5 class="card-title">Examples</h5>
-        <p>
-            It has a single endpoint <code>/resolve/&lt;curie&gt;</code> that gives back JSON.
-            Here are a few examples:
-        </p>
-    </div>
-    <table class="table">
-        <thead>
-        <tr>
-            <th scope="col">CURIE</th>
-            <th scope="col">Description</th>
-        </tr>
-        </thead>
-        <tr>
-            <td><a href="{{ url_for('biolookup.resolve', curie='DOID:14330' ) }}">DOID:14330</a></td>
-            <td>🟢 exact</td>
-        </tr>
-        <tr>
-            <td><a href="{{ url_for('biolookup.resolve', curie='doid:14330' ) }}">doid:14330</a></td>
-            <td>🟢 capitalization variant</td>
-        </tr>
-        <tr>
-            <td><a href="{{ url_for('biolookup.resolve', curie='DO:14330' ) }}">DO:14330</a></td>
-            <td>🟢 synonym identified in metaregistry</td>
-        </tr>
-        <tr>
-            <td><a href="{{ url_for('biolookup.resolve', curie='GO:0000501' ) }}">GO:0000501</a></td>
-            <td>🟢 secondary identifier mapped</td>
-        </tr>
-        <tr>
-            <td><a href="{{ url_for('biolookup.resolve', curie='GO:GO:0000501' ) }}">GO:GO:0000501</a></td>
-            <td>🟢 banana problem mapped</td>
-        </tr>
-        <tr>
-            <td><a href="{{ url_for('biolookup.resolve', curie='APO:0000155' ) }}">apo:0000155</a></td>
-            <td>🟡 able to look up name, but prefix is not listed on Identifiers.org</td>
-        </tr>
-        <tr>
-            <td><a href="{{ url_for('biolookup.resolve', curie='wikidata:Q11085' ) }}">wikidata:Q11085</a></td>
-            <td>🟡 able to generate Identifiers.org link, but name unavailable</td>
-        </tr>
-        <tr>
-            <td><a href="{{ url_for('biolookup.resolve', curie='DOID:00000' ) }}">DOID:00000</a></td>
-            <td>🔴 valid prefix, but invalid identifier</td>
-        </tr>
-        <tr>
-            <td><a href="{{ url_for('biolookup.resolve', curie='NNN:00000' ) }}">NNN:00000</a></td>
-            <td>🔴 invalid prefix</td>
-        </tr>
-    </table>
-    <div class="card-footer text-center">
-        {% include "footer.html" %}
-    </div>
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        (function ($) {
+            $.fn.counter = function () {
+                const $this = $(this),
+                    numberFrom = 0,
+                    numberTo = parseInt($this.attr('data-to')),
+                    delta = numberTo - numberFrom,
+                    deltaPositive = delta > 0,
+                    time = parseInt($this.attr('data-time')),
+                    changeTime = 10;
+
+                let currentNumber = numberFrom,
+                    value = delta * changeTime / time;
+                var interval1;
+                const changeNumber = () => {
+                    currentNumber += value;
+                    //checks if currentNumber reached numberTo
+                    (deltaPositive && currentNumber >= numberTo) || (!deltaPositive && currentNumber <= numberTo) ? currentNumber = numberTo : currentNumber;
+                    this.text(parseInt(currentNumber));
+                    currentNumber === numberTo ? clearInterval(interval1) : currentNumber;
+                }
+
+                interval1 = setInterval(changeNumber, changeTime);
+            }
+        }(jQuery));
+
+        $(document).ready(function () {
+            $('.count-prefixes').counter();
+            $('.count-names').counter();
+            $('.count-alts').counter();
+            $('.count-defs').counter();
+        });
+    </script>
 {% endblock %}
