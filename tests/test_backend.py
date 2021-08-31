@@ -77,7 +77,9 @@ class BackendTestCase(unittest.TestCase):
             self.assertEqual({"go": 3, "hgnc": 3}, dict(backend.summarize_names()))
             self.assertEqual({"go": 3, "hgnc": 2}, dict(backend.summarize_definitions()))
             self.assertEqual({"go": 1}, dict(backend.summarize_alts()))
-            self.assertEqual({"hgnc": 3}, dict(backend.summarize_species()), msg="Wrong species summary")
+            self.assertEqual(
+                {"hgnc": 3}, dict(backend.summarize_species()), msg="Wrong species summary"
+            )
 
         # Test name lookup
         self.assertEqual(
