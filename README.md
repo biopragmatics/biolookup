@@ -55,9 +55,7 @@ assert res["definition"] is not None  # not shown for brevity
 The [INDRA Lab](https://indralab.github.io) hosts an instance of the Biolookup Service at
 http://biolookup.io, so you can alternatively use `http://biolookup.io/lookup/doid:14330`.
 
-If you've configured the `BIOLOOKUP_SQLALCHEMY_URI` environment variable (or any other valid way
-with [`pystow`](https://github.com/cthoyt/pystow) to point directly at the database for an instance
-of the Biolookup Service, you can use the following:
+The same can be accomplished using the `biolookup` package:
 
 ```python
 import biolookup
@@ -66,6 +64,11 @@ res = biolookup.lookup("doid:14330")
 assert res["name"] == "Parkinson's disease"
 # ... same as before
 ```
+
+If you've configured the `BIOLOOKUP_SQLALCHEMY_URI` environment variable (or any other valid way
+with [`pystow`](https://github.com/cthoyt/pystow) to point directly at the database for an instance
+of the Biolookup Service, it will make a direct connection to the database instead of using the
+web-based API.
 
 ### 🕸️ Running the Lookup App
 
