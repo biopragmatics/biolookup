@@ -58,13 +58,19 @@ def home():
     )
 
 
-@ui.route("/summary")
+@ui.route("/statistics")
 def summary():
     """Serve the summary page."""
     return render_template(
-        "summary.html",
+        "statistics.html",
         summary_df=backend.summary_df(),
     )
+
+
+@ui.route("/about")
+def about():
+    """Serve the about page."""
+    return render_template("meta/about.html")
 
 
 @ui.route("/downloads")
@@ -82,7 +88,7 @@ def usage():
 @ui.route("/entity/<curie>")
 def entity(curie: str):
     """Serve an entity page."""
-    res = backend.resolve(curie)
+    res = backend.lookup(curie)
     return render_template("entity.html", res=res)
 
 

@@ -18,7 +18,8 @@
     <p>
         The Biolookup Service is built on <a href="https://flask.palletsprojects.com">Flask</a>
         as a thin wrapper around the <a href="https://github.com/biolookup/biolookup"><code>biolookup</code></a>
-        Python package. It exposes a single endpoint for accessing entity metadata for which <a href="https://swagger.io/">Swagger</a>
+        Python package. It exposes a single endpoint for accessing entity metadata for which <a
+            href="https://swagger.io/">Swagger</a>
         API documentation is automatically generated
         by <a href="https://github.com/flasgger/flasgger">Flasgger</a>.
     </p>
@@ -42,57 +43,41 @@ assert res["definition"] is not None  # not shown for brevity</code></pre>
         <a href="https://github.com/biolookup/biolookup#-installation">these instructions</a>.
     </p>
     <p>
-        The Biolookup can be used to normalize prefixes across MIRIAM and all the (very plentiful) variants that pop
-        up in ontologies in OBO Foundry and the OLS with the <code>normalize_prefix()</code> function.
+        The <code>biolookup</code> Python package can be used to interact with the web service or directly with the
+        database if it's pre-configured.
     </p>
     <pre><code class="language-python">import biolookup
 
-# This works for synonym prefixes, like:
-assert 'ncbitaxon' == biolookup.normalize_prefix('taxonomy')
+res = biolookup.lookup("doid:14330")
+assert res["name"] == "Parkinson's disease"
+assert res["identifier"] == "14330"
+assert res["prefix"] == "doid"
+assert res["definition"] is not None  # not shown for brevity</code></pre>
 
-# This works for common mistaken prefixes, like:
-assert 'pubchem.compound' == biolookup.normalize_prefix('pubchem')
-
-# This works for prefixes that are often written many ways, like:
-assert 'eccode' == biolookup.normalize_prefix('ec-code')
-assert 'eccode' == biolookup.normalize_prefix('EC_CODE')
-
-# If a prefix is not registered, it gives back `None`
-assert biolookup.normalize_prefix('not a real key') is None</code></pre>
+    <h2>Local Deployment of the Biolookup Service</h2>
     <p>
-        Entries in the Bioregistry can be looked up with the <code>get()</code> function.
-    </p>
-    <pre><code class="language-python">entry = biolookup.get('taxonomy')
-# there are lots of mysteries to discover in this dictionary!</code></pre>
-    <p>
-        The full Bioregistry can be read in a Python project using:
-    </p>
-    <pre><code class="language-python">registry = biolookup.read_registry()</code></pre>
-
-    <h2>Local Deployment of the Bioregistry Web Application</h2>
-    <p>
-        As the Bioregistry is open source, it's possible to host your own instance of the Bioregistry web application.
-        Further, it's possible create a local derivative of the registry, metaregistry, or collections that can be
-        deployed in your own instance. Here are examples how to do that:
+        As the <code>biolookup</code> package is open source, it's possible to host your own instance of the Biolookup
+        Service. Further, it's possible create a local derivative of the database with a custom instance of the <a
+            href="https://bioregistry.io">Bioregistry</a>. Here are examples how to do that:
     </p>
     <h4>Python CLI</h4>
     <p>
-        You can also install and run the Bioregistry app from the shell:
+        You can also install and run the Biolookup Service from the shell:
     </p>
-    <pre><code class="language-shell">$ pip install biolookup[web]
+    <pre><code class="language-shell">$ pip install biolookup
 $ biolookup web</code></pre>
-    <p>You can also download the source code, install in development mode, and run the Bioregistry app from the shell:
+    <p>You can also download the source code, install in development mode, and run the Biolookup Service from the shell:
     </p>
     <pre><code class="language-shell">$ git clone https://github.com/biolookup/biolookup.git
 $ cd biolookup
-$ pip install --editable .[web]
+$ pip install --editable .
 $ biolookup web</code></pre>
     <h4>Docker</h4>
-    <p>You can deploy your own instance of the Bioregistry with:</p>
-    <pre><code class="language-shell">$ docker run -id -p 8766:8766 biolookup/biolookup:latest</code></pre>
+    <p>You can deploy your own instance of the Biolookup Service with:</p>
+    <pre><code class="language-shell">$ docker run -id -p 8765:8765 biopragmatics/biolookup:latest</code></pre>
     <p>
-        If you want to mix using a custom version of the Bioregistry with a Docker-based deployment, please
-        see the dockerfile in <a href="https://github.com/biolookup/biolookup-docker">
-        <i class="fab fa-github"></i> biolookup/biolookup-docker</a> for inspiration.
+        If you want to load a custom database with a Docker-based deployment, please
+        see the dockerfile in <a href="https://github.com/biopragmatics/biolookup-docker">
+        <i class="fab fa-github"></i> biopragmatics/biolookup-docker</a> for inspiration.
     </p>
 {% endblock %}

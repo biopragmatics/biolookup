@@ -2,20 +2,26 @@
 
 {% block title %}{{ res.name }}{% endblock %}
 
-{% block content %}
-    <h5 class="card-header">{{ res.name }}</h5>
-    <div class="card-body">
-        <dl>
-            <dt>Prefix</dt>
-            <dd>{{ res.prefix }}</dd>
-            <dt>Identifier</dt>
-            <dd>{{ res.identifier }}</dd>
-            <dt>Name</dt>
-            <dd>{{ res.name }}</dd>
-            <dt>Definition</dt>
-            <dd>{{ res.definition }}</dd>
-            <dt>Species</dt>
-            <dd>{{ res.species }}</dd>
-        </dl>
+{% block container %}
+    <div class="card">
+        <h5 class="card-header">{{ res.name }}</h5>
+        <div class="card-body">
+            <dl>
+                <dt>Prefix</dt>
+                <dd><a href="https://bioregistry.io/{{ res.prefix }}">{{ res.prefix }}</a></dd>
+                <dt>Identifier</dt>
+                <dd>{{ res.identifier }}</dd>
+                <dt>Name</dt>
+                <dd>{{ res.name }}</dd>
+                {% if res.definition %}
+                    <dt>Definition</dt>
+                    <dd>{{ res.definition }}</dd>
+                {% endif %}
+                {% if res.species %}
+                    <dt>Species</dt>
+                    <dd>{{ res.species }}</dd>
+                {% endif %}
+            </dl>
+        </div>
     </div>
 {% endblock %}
