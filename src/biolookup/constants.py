@@ -12,6 +12,8 @@ DERIVED_NAME = "entities"
 
 MODULE = pystow.module("biolookup")
 
+DEFAULT = "http://biolookup.io"
+
 
 def get_sqlalchemy_uri() -> str:
     """Get the SQLAlchemy URI."""
