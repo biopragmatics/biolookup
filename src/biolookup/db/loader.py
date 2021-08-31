@@ -27,6 +27,7 @@ from tabulate import tabulate
 from ..constants import (
     ALTS_TABLE_NAME,
     DEFS_TABLE_NAME,
+    DERIVED_NAME,
     REFS_TABLE_NAME,
     SPECIES_TABLE_NAME,
     get_sqlalchemy_uri,
@@ -59,6 +60,7 @@ def load(
     alts_table: Optional[str] = None,
     defs_table: Optional[str] = None,
     species_table: Optional[str] = None,
+    derived_table: Optional[str] = None,
     test: bool = False,
     uri: Optional[str] = None,
 ) -> None:
@@ -72,6 +74,7 @@ def load(
     :param defs_path: Path to the definitions table data
     :param species_table: Name of the species table
     :param species_path: Path to the species table data
+    :param derived_table: Name of the prefix-id-... derived table.
     :param test: Should only a test set of rows be uploaded? Defaults to false.
     :param uri: The URI of the database to connect to.
     """
@@ -84,10 +87,62 @@ def load(
         defs_table = DEFS_TABLE_NAME
     if species_table is None:
         species_table = SPECIES_TABLE_NAME
+    if derived_table is None:
+        derived_table = DERIVED_NAME
     _load_alts(engine=engine, table=alts_table, path=alts_path, test=test)
     _load_definition(engine=engine, table=defs_table, path=defs_path, test=test)
     _load_name(engine=engine, table=refs_table, path=refs_path, test=test)
     _load_species(engine=engine, table=species_table, path=species_path, test=test)
+
+    # Use
+    drop_derived = f"DROP TABLE IF EXISTS {derived_table} CASCADE;"
+    create_derived = dedent(
+        f"""\
+        CREATE TABLE {derived_table} AS (
+        SELECT r.prefix, r.identifier, r.name, d.definition, s.species
+        FROM {refs_table} r
+        LEFT JOIN {defs_table} d on r.prefix = d.prefix
+            and r.identifier = d.identifier
+        LEFT JOIN {species_table} s on r.prefix = s.prefix
+            and r.identifier = s.identifier
+        )
+    """  # noqa:S608
+    ).rstrip()
+    pkey_statement = dedent(
+        f"""
+        ALTER TABLE {derived_table}
+            ADD CONSTRAINT pk_{derived_table} PRIMARY KEY (prefix, identifier);
+    """
+    ).rstrip()
+
+    with closing(engine.raw_connection()) as connection:
+        with closing(connection.cursor()) as cursor:
+            echo("Cleanup table")
+            echo(drop_derived, fg="yellow")
+            cursor.execute(drop_derived)
+
+            echo("Creating derived table")
+            echo(create_derived, fg="yellow")
+            cursor.execute(create_derived)
+            echo("Done creating derived table")
+
+            echo("Indexing PKEY on derived table")
+            echo(pkey_statement, fg="yellow")
+            cursor.execute(pkey_statement)
+            echo("Done indexing PKEY on derived table")
+
+            echo("Dropping unused tables")
+            drop_refs = f"DROP TABLE {refs_table} CASCADE;"
+            echo(drop_refs)
+            cursor.execute(drop_refs)
+            drop_defs = f"DROP TABLE {defs_table} CASCADE;"
+            echo(drop_defs)
+            cursor.execute(drop_defs)
+            drop_species = f"DROP TABLE {species_table} CASCADE;"
+            echo(drop_species)
+            cursor.execute(drop_species)
+
+    echo("Done")
 
 
 def _load_alts(
@@ -211,9 +266,10 @@ def _load_table(
     """
     ).rstrip()
 
+    drop_summary_statement = f"DROP TABLE IF EXISTS {table}_summary CASCADE;"
     create_summary_statement = dedent(
         f"""
-    CREATE MATERIALIZED VIEW {table}_summary AS
+    CREATE TABLE {table}_summary AS
       SELECT prefix, COUNT(identifier) as identifier_count
       FROM {table}
       GROUP BY prefix;
@@ -254,6 +310,8 @@ def _load_table(
             echo("Preparing blank slate")
             echo(drop_statement, fg="yellow")
             cursor.execute(drop_statement)
+            echo(drop_summary_statement, fg="yellow")
+            cursor.execute(drop_summary_statement)
 
             echo("Creating table")
             echo(create_statement, fg="yellow")

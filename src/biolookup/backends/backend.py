@@ -56,12 +56,17 @@ class Backend:
         """Summarize the definitions."""
         raise NotImplementedError
 
+    def summarize_species(self) -> Mapping[str, Any]:
+        """Summarize the species."""
+        raise NotImplementedError
+
     def count_all(self):
         """Count all."""
         self.count_prefixes()
-        self.count_prefixes()
+        self.count_definitions()
         self.count_alts()
         self.count_names()
+        self.count_species()
 
     def count_names(self) -> Optional[int]:
         """Count the number of names in the database."""
@@ -74,6 +79,9 @@ class Backend:
 
     def count_prefixes(self) -> Optional[int]:
         """Count the number of prefixes in the database."""
+
+    def count_species(self) -> Optional[int]:
+        """Count the number of species links in the database."""
 
     def resolve(self, curie: str, resolve_alternate: bool = True) -> Mapping[str, Any]:
         """Return the results and summary when resolving a CURIE string."""
