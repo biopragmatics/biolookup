@@ -13,10 +13,12 @@ later, but that will cause problems--the code will get executed twice:
 .. seealso:: https://click.palletsprojects.com/en/7.x/setuptools/#setuptools-integration
 """
 
+import json
 import logging
 
 import click
 
+from . import api
 from .app.cli import web
 from .db.cli import load
 
@@ -29,6 +31,13 @@ logger = logging.getLogger(__name__)
 @click.version_option()
 def main():
     """CLI for the Biolookup Service."""
+
+
+@main.command(name="lookup")
+@click.argument("curie")
+def lookup(curie: str):
+    """Look up a CURIE."""
+    print(json.dumps(api.lookup(curie), indent=2, sort_keys=True))
 
 
 main.add_command(web)
