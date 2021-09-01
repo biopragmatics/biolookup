@@ -85,7 +85,7 @@ def usage():
     return render_template("meta/access.html")
 
 
-@ui.route("/entity/<curie>")
+@ui.route("/<curie>")
 def entity(curie: str):
     """Serve an entity page."""
     res = backend.lookup(curie)
