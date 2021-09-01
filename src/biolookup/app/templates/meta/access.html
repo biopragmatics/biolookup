@@ -28,7 +28,7 @@
         documentation</a> or follow this example for getting metadata for a given CURIE in Python:
     </p>
     <pre><code class="language-python">import requests
-res = requests.get("http://biolookup:5000/lookup/doid:14330").json()
+res = requests.get("http://biolookup.io/api/lookup/doid:14330").json()
 assert res["name"] == "Parkinson's disease"
 assert res["identifier"] == "14330"
 assert res["prefix"] == "doid"
