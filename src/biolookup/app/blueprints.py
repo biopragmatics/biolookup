@@ -7,7 +7,6 @@ import os
 import time
 
 from flask import Blueprint, jsonify
-from humanize.filesize import naturalsize
 
 from .proxies import backend
 
@@ -64,6 +63,8 @@ def size():
         import psutil
     except ImportError:
         return jsonify({})
+    from humanize.filesize import naturalsize
+
     process = psutil.Process(os.getpid())
     n_bytes = process.memory_info().rss  # in bytes
     return jsonify(
