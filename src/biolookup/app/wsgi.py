@@ -10,9 +10,10 @@ from typing import Optional, Union
 
 import pandas as pd
 from flasgger import Swagger
-from flask import Blueprint, Flask, render_template
+from flask import Blueprint, Flask, redirect, render_template, url_for
 from flask_bootstrap import Bootstrap
 
+import bioregistry
 from .blueprints import biolookup_blueprint
 from .proxies import backend
 from ..backends import Backend, get_backend
@@ -88,6 +89,15 @@ def usage():
 @ui.route("/<curie>")
 def entity(curie: str):
     """Serve an entity page."""
+    prefix, identifier = bioregistry.parse_curie(curie)
+    if prefix is None:
+        # TODO use parse logic from bioregistry
+        abort(404, "invalid CURIE")
+
+    norm_curie = f"{prefix}:{identifier}"
+    if norm_curie != curie:
+        return redirect(url_for(".entity", curie=norm_curie))
+
     res = backend.lookup(curie)
     return render_template("entity.html", res=res)
 
