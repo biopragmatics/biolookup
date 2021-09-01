@@ -163,7 +163,7 @@ def get_app_from_backend(backend: Backend) -> Flask:
 
     app.config["resolver_backend"] = backend
     app.register_blueprint(ui)
-    app.register_blueprint(biolookup_blueprint)
+    app.register_blueprint(biolookup_blueprint, url_prefix="/api")
 
     @app.before_first_request
     def _before_first_request():

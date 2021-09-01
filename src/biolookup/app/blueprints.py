@@ -18,7 +18,6 @@ logger = logging.getLogger(__name__)
 biolookup_blueprint = Blueprint("biolookup", __name__)
 
 
-@biolookup_blueprint.route("/resolve/<curie>")
 @biolookup_blueprint.route("/lookup/<curie>")
 def resolve(curie: str):
     """Lookup a CURIE.
