@@ -151,11 +151,18 @@ def get_app_from_backend(backend: Backend) -> Flask:
         app,
         merge=True,
         config={
-            "title": "Biolookup API",
-            "description": "Resolves CURIEs to their names, definitions, and other attributes.",
-            "contact": {
-                "responsibleDeveloper": "Charles Tapley Hoyt",
-                "email": "cthoyt@gmail.com",
+            "host": "biolookup.io",
+            "info": {
+                "title": "Biolookup Service API",
+                "description": "Retrieves metadata and ontological information about biomedical entities based on their CURIEs.",
+                "contact": {
+                    "responsibleDeveloper": "Charles Tapley Hoyt",
+                    "email": "cthoyt@gmail.com",
+                },
+                "license": {
+                    "name": "Code available under the MIT License",
+                    "url": "https://github.com/biolookup/biolookup/blob/main/LICENSE",
+                },
             },
         },
     )
