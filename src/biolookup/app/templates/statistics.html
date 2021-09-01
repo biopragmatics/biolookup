@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block styles %}
+    {{ super() }}
+    <!-- DataTables, see: https://datatables.net/examples/styling/bootstrap4.html-->
+    <link
+            rel="stylesheet"
+            href="https://cdn.datatables.net/1.10.19/css/dataTables.bootstrap4.min.css"
+    />
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <!-- DataTables, see: https://datatables.net/examples/styling/bootstrap4.html-->
+    <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $("#table-summary").DataTable();
+        });
+    </script>
+{% endblock %}
+
+{% block main %}
+    <div class="container" style="margin: 35px auto;">
+        <h3>Summary</h3>
+        <p>
+            This page is a summary of the content in the Biolookup.
+        </p>
+        <table class="table table-striped" id="table-summary">
+            <thead>
+            <tr>
+                <th scope="col">Prefix</th>
+                <th scope="col">Name</th>
+                <th scope="col">Example</th>
+                <th scope="col">Names</th>
+                <th scope="col">Alts</th>
+                <th scope="col">Definitions</th>
+                <th scope="col">Species</th>
+            </tr>
+            </thead>
+            {% for prefix, name, homepage, example, link, names, alts, defs, species in summary_df.values %}
+                <tr>
+                    <td><code>{{ prefix }}</code></td>
+                    <td>
+                        {% if homepage %}
+                            <a href="{{ homepage }}">{{ name }}</a>
+                        {% else %}
+                            {{ name }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if example %}
+                            <a href="{{ url_for('biolookup.lookup', curie=prefix + ':' + example ) }}">{{ example }}</a>
+                        {% endif %}
+                    </td>
+                    <td align="right">{{ "{:,}".format(names)}}</td>
+                    <td align="right">{{ "{:,}".format(alts) }}</td>
+                    <td align="right">{{ "{:,}".format(defs) }}</td>
+                    <td align="right">{{ "{:,}".format(species) }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+{% endblock %}

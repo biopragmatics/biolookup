@@ -1,0 +1,70 @@
+{% extends "prose.html" %}
+
+{% block title %}About{% endblock %}
+
+{% block styles %}
+    {{ super() }}
+    <link href="https://cdn.jsdelivr.net/npm/prismjs@1.23.0/themes/prism.css" rel="stylesheet"/>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.23.0/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.23.0/plugins/autoloader/prism-autoloader.min.js"></script>
+{% endblock %}
+
+{% block content %}
+    <h2>Motivation</h2>
+    <p>
+        Because names for biomedical entities can change quite often (e.g., HGNC gene symbols change quite
+        frequently), it's much safer to reference them using stable identifiers. However, humans
+        prefer names to identifies when interacting with data and knowledge, so there needs to be a fast, unified way
+        to resolve identifiers to names.
+    </p>
+    <p>
+        Ontologies like the <a
+            href="http://geneontology.org/">Gene Ontology</a> can be accessed through one of several unified lookup
+        services such as the <a href="https://www.ebi.ac.uk/ols/index">OLS</a>,
+        <a href="http://aber-owl.net">AberOWL</a>,
+        <a href="http://www.ontobee.org/">OntoBee</a>, and
+        <a href="https://bioportal.bioontology.org/">BioPortal</a>. However, these services can only be used for
+        biomedical entities appearing in ontologies, and not for other important nomenclatures such as HGNC, UniProt, or
+        PubChem. Alternatively, small databases like SwissProt (i.e., the reviewed portion of <a
+            href="https://www.uniprot.org/">UniProt</a> entries) can be exported and wrapped in small packages like the
+        <a href="https://github.com/indralab/protmapper"><code>protmapper</code></a> that provide easy lookup for names
+        based on identifiers. Larger databases like <a href="https://pubchem.ncbi.nlm.nih.gov/">PubChem Compound</a>
+        and <a href="https://www.ncbi.nlm.nih.gov/snp/">dbSNP</a> can be accessed through a programmatic API becuase
+        they can't be easily exported or quickly loaded in memory.
+    </p>
+    <p>
+        The Biolookup Service is a unified platform that is not only applicable for biomedical entities in ontologies,
+        but from both small and large databases as well.
+    </p>
+    <h2>Database Generation</h2>
+    <p>
+        The first set of resources ingested in the Biolookup Service are those listed in the Bioregistry as either
+        having an OWL or OBO ontology file. This mostly covers the OBO Foundry as well as additional resources like
+        Cellosaurus. They are parsed with a combination of the <a
+            href="https://github.com/dhimmel/obonet"><code>obonet</code></a> and <a
+            href="https://pypi.org/project/pronto/"><code>pronto</code></a> Python packages. Unfortunately, many
+        ontologies listed in the OBO Foundry that only appear with an OWL build artifact have issues that make them
+        impossible to parse. The Biolookup Service has the benefit that the resource list is externally maintained and
+        can therefore benefit from arbitrary improvements to the upstream data source. Ontologies in the
+        BioPortal are not automatically listed in the Bioregistry the same as ontologies in the OBO Foundry due to their
+        lack of quality control.
+    </p>
+    <p>
+        The second set of resources ingested in the Biolookup Service are any resources (ontologies, databases, etc.)
+        available through the <a href="https://github.com/pyobo/pyobo"><code>pyobo</code></a> Python package.
+        Additional resources can be suggested for inclusion in the Biolookup Service via the <a
+            href="https://github.com/pyobo/pyobo/issues/new">PyOBO issue tracker</a>.
+    </p>
+    <h3>Database Coverage</h3>
+    <p>
+        This two-sided comparison shows the overlap between resources in the Biolookup Service and the
+        <a href="https://bioregistry.io">Bioregistry</a>. All resources included the Biolookup Service,
+        both ontologies and databases, are normalized to use Bioregistry prefixes.
+        <img height="250" src="{{ url_for('static', filename='coverage.svg') }}" alt="Bioregistry Coverage"
+             class="img-fluid"/>
+    </p>
+{% endblock %}

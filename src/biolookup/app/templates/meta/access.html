@@ -1,0 +1,83 @@
+{% extends "prose.html" %}
+
+{% block title %}Biolookup Service Programmatic Usage{% endblock %}
+
+{% block styles %}
+    {{ super() }}
+    <link href="https://cdn.jsdelivr.net/npm/prismjs@1.23.0/themes/prism.css" rel="stylesheet"/>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.23.0/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.23.0/plugins/autoloader/prism-autoloader.min.js"></script>
+{% endblock %}
+
+{% block content %}
+    <h2>API Usage</h2>
+    <p>
+        The Biolookup Service is built on <a href="https://flask.palletsprojects.com">Flask</a>
+        as a thin wrapper around the <a href="https://github.com/biolookup/biolookup"><code>biolookup</code></a>
+        Python package. It exposes a single endpoint for accessing entity metadata for which <a
+            href="https://swagger.io/">Swagger</a>
+        API documentation is automatically generated
+        by <a href="https://github.com/flasgger/flasgger">Flasgger</a>.
+    </p>
+    <p>
+        See the remaining Biolookup Service <a href="{{ url_for('flasgger.apidocs') }}"><i class="fas fa-book"></i> API
+        documentation</a> or follow this example for getting metadata for a given CURIE in Python:
+    </p>
+    <pre><code class="language-python">import requests
+res = requests.get("http://biolookup:5000/lookup/doid:14330").json()
+assert res["name"] == "Parkinson's disease"
+assert res["identifier"] == "14330"
+assert res["prefix"] == "doid"
+assert res["definition"] is not None  # not shown for brevity</code></pre>
+
+    <!--------------->
+    <h2>Python Package Usage</h2>
+    <p>
+        The Python source code can be found at
+        <a href="https://github.com/biolookup/biolookup"><i class="fab fa-github"></i> biolookup/biolookup</a>.
+        It can be installed with <code>pip install biolookup</code> or in development mode by following
+        <a href="https://github.com/biolookup/biolookup#-installation">these instructions</a>.
+    </p>
+    <p>
+        The <code>biolookup</code> Python package can be used to interact with the web service or directly with the
+        database if it's pre-configured.
+    </p>
+    <pre><code class="language-python">import biolookup
+
+res = biolookup.lookup("doid:14330")
+assert res["name"] == "Parkinson's disease"
+assert res["identifier"] == "14330"
+assert res["prefix"] == "doid"
+assert res["definition"] is not None  # not shown for brevity</code></pre>
+
+    <h2>Local Deployment of the Biolookup Service</h2>
+    <p>
+        As the <code>biolookup</code> package is open source, it's possible to host your own instance of the Biolookup
+        Service. Further, it's possible create a local derivative of the database with a custom instance of the <a
+            href="https://bioregistry.io">Bioregistry</a>. Here are examples how to do that:
+    </p>
+    <h4>Python CLI</h4>
+    <p>
+        You can also install and run the Biolookup Service from the shell:
+    </p>
+    <pre><code class="language-shell">$ pip install biolookup
+$ biolookup web</code></pre>
+    <p>You can also download the source code, install in development mode, and run the Biolookup Service from the shell:
+    </p>
+    <pre><code class="language-shell">$ git clone https://github.com/biolookup/biolookup.git
+$ cd biolookup
+$ pip install --editable .
+$ biolookup web</code></pre>
+    <h4>Docker</h4>
+    <p>You can deploy your own instance of the Biolookup Service with:</p>
+    <pre><code class="language-shell">$ docker run -id -p 8765:8765 biopragmatics/biolookup:latest</code></pre>
+    <p>
+        If you want to load a custom database with a Docker-based deployment, please
+        see the dockerfile in <a href="https://github.com/biopragmatics/biolookup-docker">
+        <i class="fab fa-github"></i> biopragmatics/biolookup-docker</a> for inspiration.
+    </p>
+{% endblock %}

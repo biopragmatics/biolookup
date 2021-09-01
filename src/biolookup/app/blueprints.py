@@ -7,9 +7,9 @@ import os
 import time
 
 from flask import Blueprint, jsonify
-from humanize.filesize import naturalsize
 
 from .proxies import backend
+from ..constants import DEFAULT_URL
 
 __all__ = [
     "biolookup_blueprint",
@@ -19,9 +19,8 @@ logger = logging.getLogger(__name__)
 biolookup_blueprint = Blueprint("biolookup", __name__)
 
 
-@biolookup_blueprint.route("/resolve/<curie>")
 @biolookup_blueprint.route("/lookup/<curie>")
-def resolve(curie: str):
+def lookup(curie: str):
     """Lookup a CURIE.
 
     The goal of this endpoint is to lookup metadata and ontological information
@@ -41,10 +40,11 @@ def resolve(curie: str):
         type: string
         example: doid:14330
     """  # noqa:DAR101,DAR201
-    logger.debug("resolving %s", curie)
+    logger.debug("querying %s", curie)
     start = time.time()
     rv = backend.lookup(curie)
-    logger.debug("resolved %s in %.2f seconds", curie, time.time() - start)
+    logger.debug("queried %s in %.2f seconds", curie, time.time() - start)
+    rv["providers"]["biolookup"] = f"{DEFAULT_URL}/{curie}"
     return jsonify(rv)
 
 
@@ -64,6 +64,8 @@ def size():
         import psutil
     except ImportError:
         return jsonify({})
+    from humanize.filesize import naturalsize
+
     process = psutil.Process(os.getpid())
     n_bytes = process.memory_info().rss  # in bytes
     return jsonify(
