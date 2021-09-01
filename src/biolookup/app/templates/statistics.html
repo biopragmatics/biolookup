@@ -17,21 +17,17 @@
     <script>
         $(document).ready(function () {
             $("#table-summary").DataTable();
-            $("#table-summary_wrapper").children(":first-child").addClass("card-body");
-            $("#table-summary_wrapper").children(":last-child").addClass("card-body");
         });
     </script>
 {% endblock %}
 
-{% block container %}
-    <div class="card">
-        <h5 class="card-header">Summary</h5>
-        <div class="card-body">
-            <p>
-                This page is a summary of the content in the Biolookup.
-            </p>
-        </div>
-        <table class="table" id="table-summary">
+{% block main %}
+    <div class="container" style="margin: 35px auto;">
+        <h3>Summary</h3>
+        <p>
+            This page is a summary of the content in the Biolookup.
+        </p>
+        <table class="table table-striped" id="table-summary">
             <thead>
             <tr>
                 <th scope="col">Prefix</th>
@@ -40,9 +36,10 @@
                 <th scope="col">Names</th>
                 <th scope="col">Alts</th>
                 <th scope="col">Definitions</th>
+                <th scope="col">Species</th>
             </tr>
             </thead>
-            {% for prefix, name, homepage, example, link, names, alts, defs in summary_df.values %}
+            {% for prefix, name, homepage, example, link, names, alts, defs, species in summary_df.values %}
                 <tr>
                     <td><code>{{ prefix }}</code></td>
                     <td>
@@ -54,12 +51,13 @@
                     </td>
                     <td>
                         {% if example %}
-                            <a href="{{ url_for('biolookup.resolve', curie=prefix + ':' + example ) }}">{{ example }}</a>
+                            <a href="{{ url_for('biolookup.lookup', curie=prefix + ':' + example ) }}">{{ example }}</a>
                         {% endif %}
                     </td>
-                    <td align="right">{{ names }}</td>
-                    <td align="right">{{ alts }}</td>
-                    <td align="right">{{ defs }}</td>
+                    <td align="right">{{ "{:,}".format(names)}}</td>
+                    <td align="right">{{ "{:,}".format(alts) }}</td>
+                    <td align="right">{{ "{:,}".format(defs) }}</td>
+                    <td align="right">{{ "{:,}".format(species) }}</td>
                 </tr>
             {% endfor %}
         </table>

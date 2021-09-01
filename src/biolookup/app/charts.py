@@ -4,11 +4,12 @@
 
 import pathlib
 
+import bioregistry
 import matplotlib.pyplot as plt
-from biolookup import backends
 from matplotlib_venn import venn2
 
-import bioregistry
+from biolookup import backends
+
 
 HERE = pathlib.Path(__file__).parent.resolve()
 STATIC = HERE.joinpath("static")
@@ -26,5 +27,5 @@ def main():
     plt.close(fig)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

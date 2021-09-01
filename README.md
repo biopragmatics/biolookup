@@ -1,8 +1,6 @@
-<!--
 <p align="center">
-  <img src="https://github.com/biolookup/biolookup/raw/main/docs/source/logo.png" height="150">
+  <img alt="Biolookup Service logo" src="https://github.com/biolookup/biolookup/raw/main/src/biolookup/app/static/logo.svg" height="150">
 </p>
--->
 
 <h1 align="center">
   Biolookup
@@ -39,13 +37,13 @@ Get metadata and ontological information about biomedical entities.
 
 ### 🔍 Querying the Biolookup Service
 
-The Biolookup Service has an endpoint `/lookup/<curie>` for retrieving metadata and ontological
+The Biolookup Service has an endpoint `/api/lookup/<curie>` for retrieving metadata and ontological
 information about a biomedical entity via its compact identifier (CURIE).
 
 ```python
 import requests
 
-res = requests.get("http://localhost:5000/lookup/doid:14330").json()
+res = requests.get("http://localhost:5000/api/lookup/doid:14330").json()
 assert res["name"] == "Parkinson's disease"
 assert res["identifier"] == "14330"
 assert res["prefix"] == "doid"
@@ -53,7 +51,7 @@ assert res["definition"] is not None  # not shown for brevity
 ```
 
 The [INDRA Lab](https://indralab.github.io) hosts an instance of the Biolookup Service at
-http://biolookup.io, so you can alternatively use `http://biolookup.io/lookup/doid:14330`.
+http://biolookup.io, so you can alternatively use `http://biolookup.io/api/lookup/doid:14330`.
 
 The same can be accomplished using the `biolookup` package:
 

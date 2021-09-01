@@ -145,6 +145,7 @@ class Backend:
         summary_defs = (
             self.summarize_definitions() if self.summarize_definitions is not None else {}
         )
+        summary_species = self.summarize_species() if self.summarize_species is not None else {}
         return pd.DataFrame(
             [
                 (
@@ -156,6 +157,7 @@ class Backend:
                     names_count,
                     summary_alts.get(prefix, 0),
                     summary_defs.get(prefix, 0),
+                    summary_species.get(prefix, 0),
                 )
                 for prefix, names_count in summary_names.items()
             ],
@@ -168,5 +170,6 @@ class Backend:
                 "names",
                 "alts",
                 "defs",
+                "species",
             ],
         )

@@ -8,12 +8,12 @@ Run with ``python -m biolookup.app``
 import logging
 from typing import Optional, Union
 
+import bioregistry
 import pandas as pd
 from flasgger import Swagger
-from flask import Blueprint, Flask, redirect, render_template, url_for
+from flask import Blueprint, Flask, abort, redirect, render_template, url_for
 from flask_bootstrap import Bootstrap
 
-import bioregistry
 from .blueprints import biolookup_blueprint
 from .proxies import backend
 from ..backends import Backend, get_backend
@@ -164,7 +164,8 @@ def get_app_from_backend(backend: Backend) -> Flask:
             "host": "biolookup.io",
             "info": {
                 "title": "Biolookup Service API",
-                "description": "Retrieves metadata and ontological information about biomedical entities based on their CURIEs.",
+                "description": "Retrieves metadata and ontological information about "
+                "biomedical entities based on their CURIEs.",
                 "contact": {
                     "responsibleDeveloper": "Charles Tapley Hoyt",
                     "email": "cthoyt@gmail.com",
