@@ -1,5 +1,5 @@
 <p align="center">
-  <img alt="Biolookup Service logo" src="https://github.com/biolookup/biolookup/raw/main/src/biolookup/app/static/logo.svg" height="150">
+  <img alt="Biolookup Service logo" src="https://github.com/biopragmatics/biolookup/raw/main/src/biolookup/app/static/logo.svg" height="150">
 </p>
 
 <h1 align="center">
@@ -7,8 +7,8 @@
 </h1>
 
 <p align="center">
-    <a href="https://github.com/biolookup/biolookup/actions?query=workflow%3ATests">
-        <img alt="Tests" src="https://github.com/biolookup/biolookup/workflows/Tests/badge.svg" />
+    <a href="https://github.com/biopragmatics/biolookup/actions?query=workflow%3ATests">
+        <img alt="Tests" src="https://github.com/biopragmatics/biolookup/workflows/Tests/badge.svg" />
     </a>
     <a href="https://github.com/cthoyt/cookiecutter-python-package">
         <img alt="Cookiecutter template from @cthoyt" src="https://img.shields.io/badge/Cookiecutter-python--package-yellow" /> 
@@ -19,7 +19,7 @@
     <a href="https://pypi.org/project/biolookup">
         <img alt="PyPI - Python Version" src="https://img.shields.io/pypi/pyversions/biolookup" />
     </a>
-    <a href="https://github.com/biolookup/biolookup/blob/main/LICENSE">
+    <a href="https://github.com/biopragmatics/biolookup/blob/main/LICENSE">
         <img alt="PyPI - License" src="https://img.shields.io/pypi/l/biolookup" />
     </a>
     <a href='https://biolookup.readthedocs.io/en/latest/?badge=latest'>
@@ -86,18 +86,18 @@ $ biolookup web --sql --uri postgresql+psycopg2://postgres:biolookup@localhost:5
 If `--uri` is not given for the `web` subcommand, it
 uses `pystow.get_config("biolookup", "sqlalchemy_uri)`to look up from `BIOLOOKUP_SQLALCHEMY_URI` or
 in `~/.config/biolookup.ini`. If none is given, it defaults to a SQLite database
-in `~/.data/biolookup/biolookup.db`.
+in `~/.data/biopragmatics/biolookup.db`.
 
 ### 🗂️ Load the Database
 
 ```shell
-$ biolookup load  --uri postgresql+psycopg2://postgres:biolookup@localhost:5434/biolookup
+$ biolookup load --uri postgresql+psycopg2://postgres:biolookup@localhost:5434/biolookup
 ```
 
 If `--uri` is not given for the `load` subcommand, it
 uses `pystow.get_config("biolookup", "sqlalchemy_uri)`to look up from `BIOLOOKUP_SQLALCHEMY_URI` or
 in `~/.config/biolookup.ini`. If none is given, it creates a defaults a SQLite database
-at `~/.data/biolookup/biolookup.db`.
+at `~/.data/biopragmatics/biolookup.db`.
 
 ## 🚀 Installation
 
@@ -111,13 +111,13 @@ $ pip install biolookup
 The most recent code and data can be installed directly from GitHub with:
 
 ```bash
-$ pip install git+https://github.com/biolookup/biolookup.git
+$ pip install git+https://github.com/biopragmatics/biolookup.git
 ```
 
 To install in development mode, use the following:
 
 ```bash
-$ git clone git+https://github.com/biolookup/biolookup.git
+$ git clone git+https://github.com/biopragmatics/biolookup.git
 $ cd biolookup
 $ pip install -e .
 ```
@@ -125,7 +125,7 @@ $ pip install -e .
 ## 👐 Contributing
 
 Contributions, whether filing an issue, making a pull request, or forking, are appreciated. See
-[CONTRIBUTING.rst](https://github.com/biolookup/biolookup/blob/master/CONTRIBUTING.rst) for more
+[CONTRIBUTING.rst](https://github.com/biopragmatics/biolookup/blob/master/CONTRIBUTING.rst) for more
 information on getting involved.
 
 ## 👀 Attribution

@@ -172,7 +172,7 @@ def get_app_from_backend(backend: Backend) -> Flask:
                 },
                 "license": {
                     "name": "Code available under the MIT License",
-                    "url": "https://github.com/biolookup/biolookup/blob/main/LICENSE",
+                    "url": "https://github.com/biopragmatics/biolookup/blob/main/LICENSE",
                 },
             },
         },

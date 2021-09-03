@@ -7,7 +7,7 @@ Having a Problem? Submit an Issue.
 ----------------------------------
 1. Check that you have the latest version of :code:`biolookup`
 2. Check that StackOverflow hasn't already solved your problem
-3. Go here: https://github.com/biolookup/biolookup/issues
+3. Go here: https://github.com/biopragmatics/biolookup/issues
 4. Check that this issue hasn't been solved
 5. Click "new issue"
 6. Add a short, but descriptive title
@@ -22,7 +22,7 @@ Same drill! Submit an issue and we'll have a nice conversation in the thread.
 Want to Contribute?
 -------------------
 1. Get the code. Fork the repository from GitHub using the big green button in the top-right corner of
-   https://github.com/biolookup/biolookup
+   https://github.com/biopragmatics/biolookup
 2. Clone your directory with
 
 .. code-block:: sh
@@ -70,7 +70,7 @@ To pull in upstream changes:
 
 .. code-block:: sh
 
-    $ git remote add upstream https://github.com/biolookup/biolookup
+    $ git remote add upstream https://github.com/biopragmatics/biolookup
     $ git fetch upstream develop
 
 Check the log to make sure the upstream changes don't affect your work too much:
