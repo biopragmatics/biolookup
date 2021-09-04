@@ -21,6 +21,16 @@
                     <dt>Species</dt>
                     <dd>{{ res.species }}</dd>
                 {% endif %}
+                {% if res.synonyms %}
+                    <dt>Synonyms</dt>
+                    <dd>
+                        <ul>
+                        {% for synonym in res.synonyms %}
+                            <li>{{ synonym }}</li>
+                        {% endfor %}
+                        </ul>
+                    </dd>
+                {% endif %}
             </dl>
         </div>
     </div>

@@ -60,6 +60,10 @@ class Backend:
         """Summarize the species."""
         raise NotImplementedError
 
+    def summarize_synonyms(self) -> Mapping[str, Any]:
+        """Summarize the synonyms."""
+        raise NotImplementedError
+
     def count_all(self):
         """Count all."""
         self.count_prefixes()
@@ -67,6 +71,7 @@ class Backend:
         self.count_alts()
         self.count_names()
         self.count_species()
+        self.count_synonyms()
 
     def count_names(self) -> Optional[int]:
         """Count the number of names in the database."""
@@ -82,6 +87,9 @@ class Backend:
 
     def count_species(self) -> Optional[int]:
         """Count the number of species links in the database."""
+
+    def count_synonyms(self) -> Optional[int]:
+        """Count the number of synonyms in the database."""
 
     def lookup(self, curie: str, *, resolve_alternate: bool = True) -> Mapping[str, Any]:
         """Return the results and summary when resolving a CURIE string."""
@@ -135,6 +143,9 @@ class Backend:
         species = self.get_species(prefix, identifier)
         if species:
             rv["species"] = species
+        synonyms = self.get_synonyms(prefix, identifier)
+        if synonyms:
+            rv["synonyms"] = synonyms
 
         return rv
 
@@ -146,6 +157,9 @@ class Backend:
             self.summarize_definitions() if self.summarize_definitions is not None else {}
         )
         summary_species = self.summarize_species() if self.summarize_species is not None else {}
+        summary_synonyms = (
+            self.summarize_synonyms() if self.summarize_synonyms() is not None else {}
+        )
         return pd.DataFrame(
             [
                 (
@@ -158,6 +172,7 @@ class Backend:
                     summary_alts.get(prefix, 0),
                     summary_defs.get(prefix, 0),
                     summary_species.get(prefix, 0),
+                    summary_synonyms.get(prefix, 0),
                 )
                 for prefix, names_count in summary_names.items()
             ],
@@ -171,5 +186,6 @@ class Backend:
                 "alts",
                 "defs",
                 "species",
+                "synonyms",
             ],
         )

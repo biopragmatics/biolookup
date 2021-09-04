@@ -6,7 +6,7 @@ import logging
 import time
 from collections import Counter
 from functools import lru_cache
-from typing import Optional, Union
+from typing import List, Optional, Union
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
@@ -18,6 +18,7 @@ from ..constants import (
     DERIVED_NAME,
     REFS_TABLE_NAME,
     SPECIES_TABLE_NAME,
+    SYNONYMS_NAME,
     get_sqlalchemy_uri,
 )
 
@@ -52,6 +53,7 @@ class RawSQLBackend(Backend):
         defs_table: Optional[str] = None,
         species_table: Optional[str] = None,
         derived_table: Optional[str] = None,
+        synonyms_table: Optional[str] = None,
     ):
         """Initialize the raw SQL backend.
 
@@ -61,6 +63,7 @@ class RawSQLBackend(Backend):
         :param defs_table: A name for the defs (prefix-id-def) table. Defaults to 'obo_def'
         :param species_table: A name for the defs (prefix-id-species) table. Defaults to 'obo_species'
         :param derived_table: A name for the prefix-id-... derived table.
+        :param synonyms_table: A name for the prefix-id-synonym table.
         """
         self.engine = _ensure_engine(engine)
 
@@ -69,13 +72,15 @@ class RawSQLBackend(Backend):
         self.defs_table = defs_table or DEFS_TABLE_NAME
         self.species_table = species_table or SPECIES_TABLE_NAME
         self.derived_table = derived_table or DERIVED_NAME
+        self.synonyms_table = synonyms_table or SYNONYMS_NAME
+
+    def _count_summary(self, table):
+        return self._get_one(f"SELECT SUM(identifier_count) FROM {table}_summary;")  # noqa:S608
 
     @lru_cache(maxsize=1)
     def count_names(self) -> int:
         """Get the number of names."""
-        return self._get_one(
-            f"SELECT SUM(identifier_count) FROM {self.refs_table}_summary;"  # noqa:S608
-        )
+        return self._count_summary(self.refs_table)
 
     @lru_cache(maxsize=1)
     def count_prefixes(self) -> int:
@@ -91,17 +96,18 @@ class RawSQLBackend(Backend):
     @lru_cache(maxsize=1)
     def count_definitions(self) -> int:
         """Count definitions using a SQL query to the definitions summary table."""
-        return self._get_one(
-            f"SELECT SUM(identifier_count) FROM {self.defs_table}_summary;"  # noqa:S608
-        )
+        return self._count_summary(self.defs_table)
 
     @lru_cache(maxsize=1)
     def count_species(self) -> Optional[int]:
-        """Count species using a SQL query to the alts summary table."""
+        """Count species using a SQL query to the species summary table."""
         logger.info("counting species")
-        return self._get_one(
-            f"SELECT SUM(identifier_count) FROM {self.species_table}_summary;"  # noqa:S608
-        )
+        return self._count_summary(self.species_table)
+
+    @lru_cache(maxsize=1)
+    def count_synonyms(self) -> Optional[int]:
+        """Count synonyms using a SQL query to the synonyms summary table."""
+        return self._count_summary(self.synonyms_table)
 
     @lru_cache(maxsize=1)
     def count_alts(self) -> Optional[int]:
@@ -129,6 +135,10 @@ class RawSQLBackend(Backend):
     def summarize_species(self) -> Counter:
         """Return the results of a SQL query that dumps the species summary table."""
         return self._get_summary(self.species_table)
+
+    def summarize_synonyms(self) -> Counter:
+        """Return the results of a SQL query that dumps the synonyms summary table."""
+        return self._get_summary(self.synonyms_table)
 
     @lru_cache()
     def _get_summary(self, table) -> Counter:
@@ -186,3 +196,19 @@ class RawSQLBackend(Backend):
             if result:
                 return result[0]
         return None
+
+    def get_synonyms(self, prefix: str, identifier: str) -> List[str]:
+        """Get synonyms with a SQL query to the synonyms table."""
+        return self._help_many(self.synonyms_table, "synonym", prefix, identifier)
+
+    def _help_many(self, table: str, column: str, prefix: str, identifier: str) -> List[str]:
+        sql = text(
+            f"""
+            SELECT {column}
+            FROM {table}
+            WHERE prefix = :prefix and identifier = :identifier;
+        """
+        )  # noqa:S608
+        with self.engine.connect() as connection:
+            results = connection.execute(sql, prefix=prefix, identifier=identifier).fetchmany()
+        return [result for result, in results]
