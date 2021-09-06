@@ -6,7 +6,7 @@ import logging
 import time
 from collections import Counter
 from functools import lru_cache
-from typing import List, Optional, Union
+from typing import Iterable, List, Mapping, Optional, Tuple, Union
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
@@ -19,6 +19,7 @@ from ..constants import (
     REFS_TABLE_NAME,
     SPECIES_TABLE_NAME,
     SYNONYMS_NAME,
+    XREFS_NAME,
     get_sqlalchemy_uri,
 )
 
@@ -54,6 +55,7 @@ class RawSQLBackend(Backend):
         species_table: Optional[str] = None,
         derived_table: Optional[str] = None,
         synonyms_table: Optional[str] = None,
+        xrefs_table: Optional[str] = None,
     ):
         """Initialize the raw SQL backend.
 
@@ -64,6 +66,7 @@ class RawSQLBackend(Backend):
         :param species_table: A name for the defs (prefix-id-species) table. Defaults to 'obo_species'
         :param derived_table: A name for the prefix-id-... derived table.
         :param synonyms_table: A name for the prefix-id-synonym table.
+        :param xrefs_table: A name for the prefix-id-xprefix-xidentifier-provenance table.
         """
         self.engine = _ensure_engine(engine)
 
@@ -73,6 +76,7 @@ class RawSQLBackend(Backend):
         self.species_table = species_table or SPECIES_TABLE_NAME
         self.derived_table = derived_table or DERIVED_NAME
         self.synonyms_table = synonyms_table or SYNONYMS_NAME
+        self.xrefs_table = xrefs_table or XREFS_NAME
 
     def _count_summary(self, table):
         return self._get_one(f"SELECT SUM(identifier_count) FROM {table}_summary;")  # noqa:S608
@@ -110,6 +114,11 @@ class RawSQLBackend(Backend):
         return self._count_summary(self.synonyms_table)
 
     @lru_cache(maxsize=1)
+    def count_xrefs(self) -> Optional[int]:
+        """Count xrefs using a SQL query to the xrefs summary table."""
+        return self._count_summary(self.xrefs_table)
+
+    @lru_cache(maxsize=1)
     def count_alts(self) -> Optional[int]:
         """Count alts using a SQL query to the alts summary table."""
         logger.info("counting alts")
@@ -139,6 +148,10 @@ class RawSQLBackend(Backend):
     def summarize_synonyms(self) -> Counter:
         """Return the results of a SQL query that dumps the synonyms summary table."""
         return self._get_summary(self.synonyms_table)
+
+    def summarize_xrefs(self) -> Counter:
+        """Return the results of a SQL query that dumps the xrefs summary table."""
+        return self._get_summary(self.xrefs_table)
 
     @lru_cache()
     def _get_summary(self, table) -> Counter:
@@ -199,16 +212,43 @@ class RawSQLBackend(Backend):
 
     def get_synonyms(self, prefix: str, identifier: str) -> List[str]:
         """Get synonyms with a SQL query to the synonyms table."""
-        return self._help_many(self.synonyms_table, "synonym", prefix, identifier)
+        return self._help_many(
+            "synonym", table=self.synonyms_table, prefix=prefix, identifier=identifier
+        )
 
-    def _help_many(self, table: str, column: str, prefix: str, identifier: str) -> List[str]:
+    def get_xrefs(self, prefix: str, identifier: str) -> List[Mapping[str, str]]:
+        """Get xrefs with a SQL query to the xrefs table."""
+        return self._help_many_dict(
+            "xref_prefix",
+            "xref_identifier",
+            "provenance",
+            table=self.xrefs_table,
+            prefix=prefix,
+            identifier=identifier,
+        )
+
+    def _help_many(self, column: str, *, table: str, prefix: str, identifier: str) -> List[str]:
+        results = self._fetchmany(column, table=table, prefix=prefix, identifier=identifier)
+        return [result for result, in results]
+
+    def _help_many_dict(
+        self, *columns: str, table: str, prefix: str, identifier: str
+    ) -> List[Mapping[str, str]]:
+        results = self._fetchmany(
+            ", ".join(columns), table=table, prefix=prefix, identifier=identifier
+        )
+        return [dict(zip(columns, result)) for result in results]
+
+    def _fetchmany(
+        self, columns: str, table: str, prefix: str, identifier: str
+    ) -> Iterable[Tuple[str]]:
         sql = text(
             f"""
-            SELECT {column}
+            SELECT {columns}
             FROM {table}
             WHERE prefix = :prefix and identifier = :identifier;
         """
         )  # noqa:S608
         with self.engine.connect() as connection:
             results = connection.execute(sql, prefix=prefix, identifier=identifier).fetchmany()
-        return [result for result, in results]
+        return results

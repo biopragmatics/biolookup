@@ -25,9 +25,19 @@
                     <dt>Synonyms</dt>
                     <dd>
                         <ul>
-                        {% for synonym in res.synonyms %}
-                            <li>{{ synonym }}</li>
-                        {% endfor %}
+                            {% for synonym in res.synonyms %}
+                                <li>{{ synonym }}</li>
+                            {% endfor %}
+                        </ul>
+                    </dd>
+                {% endif %}
+                {% if res.xrefs %}
+                    <dt>Cross-References</dt>
+                    <dd>
+                        <ul>
+                            {% for xref in res.xrefs %}
+                                <li>{{ xref }}</li>
+                            {% endfor %}
                         </ul>
                     </dd>
                 {% endif %}

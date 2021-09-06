@@ -44,10 +44,16 @@
                         <p>Definitions</p>
                     </div>
                     <div class="col">
-                        <i class="fa fa-book"></i>
+                        <i class="fas fa-chess"></i>
                         <h2><span class="count-defs" data-to="{{ synonyms_count }}"
                                   data-time="1000"></span>{{ synonyms_suffix }}</h2>
                         <p>Synonyms</p>
+                    </div>
+                    <div class="col">
+                        <i class="fas fa-people-arrows"></i>
+                        <h2><span class="count-xrefs" data-to="{{ xrefs_count }}"
+                                  data-time="1000"></span>{{ xrefs_suffix }}</h2>
+                        <p>Xrefs</p>
                     </div>
                     <div class="col">
                         <i class="fa fa-paw"></i>
@@ -145,6 +151,8 @@
             $('.count-alts').counter();
             $('.count-defs').counter();
             $('.count-species').counter();
+            $('.count-synonyms').counter();
+            $('.count-xrefs').counter();
         });
     </script>
 {% endblock %}

@@ -15,13 +15,14 @@ import time
 from contextlib import closing
 from pathlib import Path
 from textwrap import dedent
-from typing import Optional, Union
+from typing import Iterable, Optional, Union
 
 import click
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 from pyobo.resource_utils import (
     ensure_alts,
     ensure_definitions,
+    ensure_inspector_javert,
     ensure_ooh_na_na,
     ensure_species,
     ensure_synonyms,
@@ -37,6 +38,7 @@ from ..constants import (
     REFS_TABLE_NAME,
     SPECIES_TABLE_NAME,
     SYNONYMS_NAME,
+    XREFS_NAME,
     get_sqlalchemy_uri,
 )
 
@@ -57,6 +59,14 @@ def echo(s, **kwargs) -> None:
 TEST_N = 100_000
 
 
+def run(cursor, sql, desc):
+    """Run a command with colorful logging."""
+    echo(f"Start {desc}")
+    echo(sql, fg="yellow")
+    cursor.execute(sql)
+    echo(f"End {desc}")
+
+
 class Loader:
     """Database loader class."""
 
@@ -70,6 +80,7 @@ class Loader:
         species_table: Optional[str] = None,
         derived_table: Optional[str] = None,
         synonyms_table: Optional[str] = None,
+        xrefs_table: Optional[str] = None,
     ):
         """Load the database.
 
@@ -80,6 +91,7 @@ class Loader:
         :param species_table: Name of the species table
         :param derived_table: Name of the prefix-id-... derived table.
         :param synonyms_table: Name of the synonyms table
+        :param xrefs_table: Name of the xrefs table
         """
         self.engine = _ensure_engine(uri)
         self.alts_table = alts_table or ALTS_TABLE_NAME
@@ -88,6 +100,7 @@ class Loader:
         self.species_table = species_table or SPECIES_TABLE_NAME
         self.derived_table = derived_table or DERIVED_NAME
         self.synonyms_table = synonyms_table or SYNONYMS_NAME
+        self.xrefs_table = xrefs_table or XREFS_NAME
 
     def load_alts(
         self,
@@ -96,7 +109,7 @@ class Loader:
         test: bool = False,
     ):
         """Load the alternative identifiers table."""
-        self._load_table(
+        self._load_three_col_table(
             table=self.alts_table,
             path=path if path is not None else ensure_alts(),
             test=test,
@@ -113,7 +126,7 @@ class Loader:
         test: bool = False,
     ):
         """Load the definitions table."""
-        self._load_table(
+        self._load_three_col_table(
             table=self.defs_table,
             path=path if path else ensure_definitions(),
             test=test,
@@ -128,7 +141,7 @@ class Loader:
         test: bool = False,
     ):
         """Load the species table."""
-        self._load_table(
+        self._load_three_col_table(
             table=self.species_table,
             path=path if path else ensure_species(),
             test=test,
@@ -143,7 +156,7 @@ class Loader:
         test: bool = False,
     ):
         """Load the names table."""
-        self._load_table(
+        self._load_three_col_table(
             table=self.refs_table,
             path=path if path else ensure_ooh_na_na(),
             test=test,
@@ -158,7 +171,7 @@ class Loader:
         test: bool = False,
     ):
         """Load the synonyms table."""
-        self._load_table(
+        self._load_three_col_table(
             table=self.synonyms_table,
             path=path if path else ensure_synonyms(),
             test=test,
@@ -167,35 +180,44 @@ class Loader:
             add_unique_constraints=False,
         )
 
-    def _load_table(
+    def load_xrefs(
         self,
-        table: str,
-        path: Union[str, Path],
-        target_col: str,
         *,
+        path: Union[None, str, Path] = None,
         test: bool = False,
-        target_col_size: Optional[int] = None,
-        add_unique_constraints: bool = True,
-        add_reverse_index: bool = False,
-        use_varchar: bool = True,
-    ) -> None:
-        drop_statement = f"DROP TABLE IF EXISTS {table} CASCADE;"
+    ):
+        """Load xrefs table."""
+        self._load_table(
+            table=self.xrefs_table,
+            path=path if path else ensure_inspector_javert(),
+            test=test,
+            target_col=["xref_prefix", "xref_identifier", "provenance"],
+            # TODO Change second column to 64 after fixing chebi's metacyc xrefs
+            target_col_type=["VARCHAR(32)", "VARCHAR(1024)", "VARCHAR(128)"],
+            add_unique_constraints=False,
+        )
 
-        if use_varchar:
-            if target_col_size is None:
-                raise ValueError("target_col_size should not be none when use_varchar=True")
-            target_col_type = f"VARCHAR({target_col_size})"
+    @staticmethod
+    def _create_table_ddl(
+        table: str,
+        target_col: Union[str, Iterable[str]],
+        target_col_type: Union[str, Iterable[str]],
+    ) -> str:
+        if isinstance(target_col, str) and isinstance(target_col_type, str):
+            column_defs = f"{target_col} {target_col_type} NOT NULL"
         else:
-            target_col_type = "TEXT"
+            column_defs = ",\n".join(
+                f"{x} {y} NOT NULL" for x, y in zip(target_col, target_col_type)
+            )
 
         # tidbit: the largest name's length is 2936 characters
-        create_statement = dedent(
+        return dedent(
             f"""
         CREATE TABLE {table} (
             id           SERIAL,  /* automatically the primary key */
             prefix       VARCHAR(32) NOT NULL,
             identifier   VARCHAR(64) NOT NULL,
-            {target_col} {target_col_type} NOT NULL
+            {column_defs}
         ) WITH (
             autovacuum_enabled = false,
             toast.autovacuum_enabled = false
@@ -203,8 +225,9 @@ class Loader:
         """
         ).rstrip()
 
-        drop_summary_statement = f"DROP TABLE IF EXISTS {table}_summary CASCADE;"
-        create_summary_statement = dedent(
+    @staticmethod
+    def _create_summary_table_ddl(table: str) -> str:
+        return dedent(
             f"""
         CREATE TABLE {table}_summary AS
           SELECT prefix, COUNT(identifier) as identifier_count
@@ -216,7 +239,11 @@ class Loader:
         """  # noqa:S608
         ).rstrip()
 
-        copy_statement = dedent(
+    @staticmethod
+    def _create_copy_ddl(table: str, target_col: Union[str, Iterable[str]]) -> str:
+        if not isinstance(target_col, str):
+            target_col = ", ".join(target_col)
+        return dedent(
             f"""
         COPY {table} (prefix, identifier, {target_col})
         FROM STDIN
@@ -224,7 +251,18 @@ class Loader:
         """
         ).rstrip()
 
-        cleanup_statement = dedent(
+    @staticmethod
+    def _create_unique_ddl(table: str) -> str:
+        return dedent(
+            f"""
+        ALTER TABLE {table}
+            ADD CONSTRAINT {table}_prefix_identifier_unique UNIQUE (prefix, identifier);
+        """
+        ).rstrip()
+
+    @staticmethod
+    def _create_autovacuum_ddl(table: str) -> str:
+        return dedent(
             f"""
         ALTER TABLE {table} SET (
             autovacuum_enabled = true,
@@ -233,85 +271,110 @@ class Loader:
         """
         ).rstrip()
 
-        index_curie_statement = f"CREATE INDEX ON {table} (prefix, identifier);"
+    @staticmethod
+    def _copy(connection, cursor, sql, path, test):
+        echo("Start COPY")
+        echo(sql, fg="yellow")
+        try:
+            with gzip.open(path, "rt") as file:
+                if test:
+                    echo(f"Loading testing data (rows={TEST_N}) from {path}")
+                    sio = io.StringIO("".join(line for line, _ in zip(file, range(TEST_N + 1))))
+                    sio.seek(0)
+                    cursor.copy_expert(sql, sio)
+                else:
+                    echo(f"Loading data from {path}")
+                    cursor.copy_expert(sql, file)
+        except Exception:
+            echo("Copy failed")
+            raise
+        else:
+            echo("Copy ended")
 
-        unique_curie_stmt = dedent(
-            f"""
-        ALTER TABLE {table}
-            ADD CONSTRAINT {table}_prefix_identifier_unique UNIQUE (prefix, identifier);
-        """
-        ).rstrip()
+        try:
+            connection.commit()
+        except Exception:
+            echo("Commit failed")
+            raise
+        else:
+            echo("Commit ended")
+
+    @staticmethod
+    def _get_target_col_type(use_varchar: bool, target_col_size: int) -> str:
+        if use_varchar:
+            if target_col_size is None:
+                raise ValueError("target_col_size should not be none when use_varchar=True")
+            return f"VARCHAR({target_col_size})"
+        else:
+            return "TEXT"
+
+    def _load_three_col_table(
+        self,
+        table: str,
+        path: Union[str, Path],
+        target_col: str,
+        *,
+        test: bool = False,
+        target_col_size: Optional[int] = None,
+        add_unique_constraints: bool = True,
+        add_reverse_index: bool = False,
+        use_varchar: bool = True,
+    ) -> None:
+        target_col_type = self._get_target_col_type(
+            use_varchar=use_varchar, target_col_size=target_col_size
+        )
+        self._load_table(
+            table=table,
+            path=path,
+            target_col=target_col,
+            target_col_type=target_col_type,
+            test=test,
+            add_unique_constraints=add_unique_constraints,
+            add_reverse_index=add_reverse_index,
+        )
+
+    def _load_table(
+        self,
+        table: str,
+        path: Union[str, Path],
+        target_col: Union[str, Iterable[str]],
+        target_col_type: Union[str, Iterable[str]],
+        *,
+        test: bool = False,
+        add_unique_constraints: bool = True,
+        add_reverse_index: bool = False,
+    ) -> None:
+        drop_statement = f"DROP TABLE IF EXISTS {table} CASCADE;"
+        drop_summary_statement = f"DROP TABLE IF EXISTS {table}_summary CASCADE;"
+        create_statement = self._create_table_ddl(
+            table=table, target_col=target_col, target_col_type=target_col_type
+        )
+        create_summary_statement = self._create_summary_table_ddl(table=table)
+        copy_statement = self._create_copy_ddl(table=table, target_col=target_col)
+        cleanup_statement = self._create_autovacuum_ddl(table=table)
+        index_curie_statement = f"CREATE INDEX ON {table} (prefix, identifier);"
+        unique_curie_stmt = self._create_unique_ddl(table=table)
+        index_reverse_statement = f"CREATE INDEX ON {table} (prefix, {target_col});"
 
         with closing(self.engine.raw_connection()) as connection:
             with closing(connection.cursor()) as cursor:
-                echo("Preparing blank slate")
-                echo(drop_statement, fg="yellow")
-                cursor.execute(drop_statement)
-                echo(drop_summary_statement, fg="yellow")
-                cursor.execute(drop_summary_statement)
-
-                echo("Creating table")
-                echo(create_statement, fg="yellow")
-                cursor.execute(create_statement)
-
-                echo("Start COPY")
-                echo(copy_statement, fg="yellow")
-                try:
-                    with gzip.open(path, "rt") as file:
-                        if test:
-                            echo(f"Loading testing data (rows={TEST_N}) from {path}")
-                            sio = io.StringIO(
-                                "".join(line for line, _ in zip(file, range(TEST_N + 1)))
-                            )
-                            sio.seek(0)
-                            cursor.copy_expert(copy_statement, sio)
-                        else:
-                            echo(f"Loading data from {path}")
-                            cursor.copy_expert(copy_statement, file)
-                except Exception:
-                    echo("Copy failed")
-                    raise
-                else:
-                    echo("Copy ended")
-
-                try:
-                    connection.commit()
-                except Exception:
-                    echo("Commit failed")
-                    raise
-                else:
-                    echo("Commit ended")
-
-                echo("Start re-enable autovacuum")
-                echo(cleanup_statement, fg="yellow")
-                cursor.execute(cleanup_statement)
-                echo("End re-enable autovacuum")
-
-                echo("Start index on prefix/identifier")
-                echo(index_curie_statement, fg="yellow")
-                cursor.execute(index_curie_statement)
-                echo("End indexing")
-
+                run(cursor, drop_statement, "dropping table")
+                run(cursor, drop_summary_statement, "dropping summary table")
+                run(cursor, create_statement, "creating table")
+                self._copy(
+                    connection=connection, cursor=cursor, sql=copy_statement, path=path, test=test
+                )
+                run(cursor, cleanup_statement, "re-enable autovacuum")
+                run(cursor, index_curie_statement, "index on prefix/identifier")
                 if add_unique_constraints:
-                    echo("Start unique on prefix/identifier")
-                    echo(unique_curie_stmt, fg="yellow")
-                    cursor.execute(unique_curie_stmt)
-                    echo("End unique")
-
+                    run(cursor, unique_curie_stmt, "constrain unique prefix/identifier")
                 if add_reverse_index:
-                    index_reverse_statement = f"CREATE INDEX ON {table} (prefix, {target_col});"
-                    echo("Start reverse indexing")
-                    echo(index_reverse_statement, fg="yellow")
-                    cursor.execute(index_reverse_statement)
-                    echo("End reverse indexing")
+                    run(cursor, index_reverse_statement, "reversing index")
 
         with closing(self.engine.raw_connection()) as connection:
             connection.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
             with connection.cursor() as cursor:
-                echo("Creating summary table")
-                echo(create_summary_statement, fg="yellow")
-                cursor.execute(create_summary_statement)
-                echo("Done creating summary table")
+                run(cursor, create_summary_statement, "creating summary table")
 
         with closing(self.engine.raw_connection()) as connection:
             connection.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
@@ -360,19 +423,9 @@ class Loader:
 
         with closing(self.engine.raw_connection()) as connection:
             with closing(connection.cursor()) as cursor:
-                echo("Cleanup table")
-                echo(drop_derived, fg="yellow")
-                cursor.execute(drop_derived)
-
-                echo("Creating derived table")
-                echo(create_derived, fg="yellow")
-                cursor.execute(create_derived)
-                echo("Done creating derived table")
-
-                echo("Indexing PKEY on derived table")
-                echo(pkey_statement, fg="yellow")
-                cursor.execute(pkey_statement)
-                echo("Done indexing PKEY on derived table")
+                run(cursor, drop_derived, "cleanup derived table")
+                run(cursor, create_derived, "create derived table")
+                run(cursor, pkey_statement, "indexing derived table primary key")
 
                 echo("Dropping unused tables")
                 drop_refs = f"DROP TABLE {self.refs_table} CASCADE;"
@@ -393,12 +446,14 @@ def load(
     defs_path: Union[None, str, Path] = None,
     species_path: Union[None, str, Path] = None,
     synonyms_path: Union[None, str, Path] = None,
+    xrefs_path: Union[None, str, Path] = None,
     refs_table: Optional[str] = None,
     alts_table: Optional[str] = None,
     defs_table: Optional[str] = None,
     species_table: Optional[str] = None,
     derived_table: Optional[str] = None,
     synonyms_table: Optional[str] = None,
+    xrefs_table: Optional[str] = None,
     test: bool = False,
     uri: Optional[str] = None,
 ) -> None:
@@ -415,6 +470,8 @@ def load(
     :param derived_table: Name of the prefix-id-... derived table.
     :param synonyms_table: Name of the synonyms table
     :param synonyms_path: Path to the syononyms table data
+    :param xrefs_table: Name of the xrefs table
+    :param xrefs_path: Path to the xrefs table data
     :param test: Should only a test set of rows be uploaded? Defaults to false.
     :param uri: The URI of the database to connect to.
     """
@@ -425,8 +482,10 @@ def load(
         species_table=species_table,
         derived_table=derived_table,
         synonyms_table=synonyms_table,
+        xrefs_table=xrefs_table,
         uri=uri,
     )
+    loader.load_xrefs(path=xrefs_path, test=test)
     loader.load_synonyms(path=synonyms_path, test=test)
     loader.load_alts(path=alts_path, test=test)
     loader.load_definition(path=defs_path, test=test)

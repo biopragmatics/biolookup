@@ -38,9 +38,10 @@
                 <th scope="col">Definitions</th>
                 <th scope="col">Species</th>
                 <th scope="col">Synonyms</th>
+                <th scope="col">Xrefs</th>
             </tr>
             </thead>
-            {% for prefix, name, homepage, example, link, names, alts, defs, species, synonyms in summary_df.values %}
+            {% for prefix, name, homepage, example, link, names, alts, defs, species, synonyms, xrefs in summary_df.values %}
                 <tr>
                     <td><code>{{ prefix }}</code></td>
                     <td>
@@ -60,6 +61,7 @@
                     <td align="right">{{ "{:,}".format(defs) }}</td>
                     <td align="right">{{ "{:,}".format(species) }}</td>
                     <td align="right">{{ "{:,}".format(synonyms) }}</td>
+                    <td align="right">{{ "{:,}".format(xrefs) }}</td>
                 </tr>
             {% endfor %}
         </table>

@@ -10,6 +10,7 @@ ALTS_TABLE_NAME = "obo_alt"
 DEFS_TABLE_NAME = "obo_def"
 DERIVED_NAME = "entities"
 SYNONYMS_NAME = "synonyms"
+XREFS_NAME = "xrefs"
 
 MODULE = pystow.module("biolookup")
 

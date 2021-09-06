@@ -51,6 +51,7 @@ SPECIES = [
     ("hgnc", "10021", "9606"),
     ("hgnc", "10023", "9606"),
 ]
+SYNONYMS = []
 
 
 def _write(path, data, last):
@@ -153,26 +154,31 @@ class TestRawSQLBackend(BackendTestCase):
         self.alts_table = "alts"
         self.defs_table = "defs"
         self.species_table = "species"
+        self.synonyms_table = "synonyms"
         with tempfile.TemporaryDirectory() as directory:
             directory = Path(directory)
             refs_path = directory / "refs.tsv.gz"
             alts_path = directory / "alts.tsv.gz"
             defs_path = directory / "defs.tsv.gz"
             species_path = directory / "species.tsv.gz"
+            synonyms_path = directory / "synonyms.tsv.gz"
             _write(refs_path, REFS, "name")
             _write(alts_path, ALTS, "alt")
             _write(defs_path, DEFS, "definition")
             _write(species_path, SPECIES, "species")
+            _write(synonyms_path, SYNONYMS, "synonym")
             loader.load(
                 uri=TEST_URI,
                 refs_path=refs_path,
                 alts_path=alts_path,
                 defs_path=defs_path,
                 species_path=species_path,
+                synonyms_path=synonyms_path,
                 refs_table=self.refs_table,
                 alts_table=self.alts_table,
                 defs_table=self.defs_table,
                 species_table=self.species_table,
+                synonyms_table=self.synonyms_table,
             )
             self.backend = get_backend(
                 sql=True,
@@ -181,6 +187,7 @@ class TestRawSQLBackend(BackendTestCase):
                 alts_table=self.alts_table,
                 defs_table=self.defs_table,
                 species_table=self.species_table,
+                synonyms_table=self.synonyms_table,
             )
 
     def test_backend(self):
