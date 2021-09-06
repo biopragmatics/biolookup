@@ -52,11 +52,12 @@ SPECIES = [
     ("hgnc", "10023", "9606"),
 ]
 SYNONYMS = []
+XREFS = []
 
 
-def _write(path, data, last):
+def _write(path, data, *last):
     with gzip.open(path, "wt") as file:
-        print("prefix", "identifier", last, sep="\t", file=file)
+        print("prefix", "identifier", *last, sep="\t", file=file)
         for line in data:
             print(*line, sep="\t", file=file)
 
@@ -155,6 +156,7 @@ class TestRawSQLBackend(BackendTestCase):
         self.defs_table = "defs"
         self.species_table = "species"
         self.synonyms_table = "synonyms"
+        self.xrefs_table = "xrefs"
         with tempfile.TemporaryDirectory() as directory:
             directory = Path(directory)
             refs_path = directory / "refs.tsv.gz"
@@ -162,11 +164,13 @@ class TestRawSQLBackend(BackendTestCase):
             defs_path = directory / "defs.tsv.gz"
             species_path = directory / "species.tsv.gz"
             synonyms_path = directory / "synonyms.tsv.gz"
+            xrefs_path = directory / "xrefs.tsv.gz"
             _write(refs_path, REFS, "name")
             _write(alts_path, ALTS, "alt")
             _write(defs_path, DEFS, "definition")
             _write(species_path, SPECIES, "species")
             _write(synonyms_path, SYNONYMS, "synonym")
+            _write(xrefs_path, XREFS, "xref_prefix", "xref_identifier", "provenance")
             loader.load(
                 uri=TEST_URI,
                 refs_path=refs_path,
@@ -174,11 +178,13 @@ class TestRawSQLBackend(BackendTestCase):
                 defs_path=defs_path,
                 species_path=species_path,
                 synonyms_path=synonyms_path,
+                xrefs_path=xrefs_path,
                 refs_table=self.refs_table,
                 alts_table=self.alts_table,
                 defs_table=self.defs_table,
                 species_table=self.species_table,
                 synonyms_table=self.synonyms_table,
+                xrefs_table=self.xrefs_table,
             )
             self.backend = get_backend(
                 sql=True,
@@ -188,6 +194,7 @@ class TestRawSQLBackend(BackendTestCase):
                 defs_table=self.defs_table,
                 species_table=self.species_table,
                 synonyms_table=self.synonyms_table,
+                xrefs_table=self.xrefs_table,
             )
 
     def test_backend(self):
