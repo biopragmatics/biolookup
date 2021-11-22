@@ -24,6 +24,7 @@ from pyobo.resource_utils import (
     ensure_definitions,
     ensure_inspector_javert,
     ensure_ooh_na_na,
+    ensure_relations,
     ensure_species,
     ensure_synonyms,
 )
@@ -36,6 +37,7 @@ from ..constants import (
     DEFS_TABLE_NAME,
     DERIVED_NAME,
     REFS_TABLE_NAME,
+    RELS_NAME,
     SPECIES_TABLE_NAME,
     SYNONYMS_NAME,
     XREFS_NAME,
@@ -81,6 +83,7 @@ class Loader:
         derived_table: Optional[str] = None,
         synonyms_table: Optional[str] = None,
         xrefs_table: Optional[str] = None,
+        rels_table: Optional[str] = None,
     ):
         """Load the database.
 
@@ -101,6 +104,7 @@ class Loader:
         self.derived_table = derived_table or DERIVED_NAME
         self.synonyms_table = synonyms_table or SYNONYMS_NAME
         self.xrefs_table = xrefs_table or XREFS_NAME
+        self.rels_table = rels_table or RELS_NAME
 
     def load_alts(
         self,
@@ -193,7 +197,28 @@ class Loader:
             test=test,
             target_col=["xref_prefix", "xref_identifier", "provenance"],
             # TODO Change second column to 64 after fixing chebi's metacyc xrefs
-            target_col_type=["VARCHAR(32)", "VARCHAR(1024)", "VARCHAR(128)"],
+            target_col_type=["VARCHAR(32)", "VARCHAR(1024)", "VARCHAR(512)"],
+            add_unique_constraints=False,
+        )
+
+    def load_rels(
+        self,
+        *,
+        path: Union[None, str, Path] = None,
+        test: bool = False,
+    ):
+        """Load relations table."""
+        self._load_table(
+            table=self.rels_table,
+            path=path if path else ensure_relations(),
+            test=test,
+            target_col=[
+                "relation_prefix",
+                "relation_identifier",
+                "target_prefix",
+                "target_identifier",
+            ],
+            target_col_type=["VARCHAR(32)", "VARCHAR(64)", "VARCHAR(32)", "VARCHAR(64)"],
             add_unique_constraints=False,
         )
 
@@ -389,7 +414,10 @@ class Loader:
             click.secho("Example query:", fg="green", bold=True)
             click.secho(select_statement, fg="green")
             result = connection.execute(select_statement)
-            headers = ["id", "prefix", "identifier", target_col]
+            if isinstance(target_col, str):
+                headers = ["id", "prefix", "identifier", target_col]
+            else:
+                headers = ["id", "prefix", "identifier", *target_col]
             click.echo(tabulate(map(tuple, result), headers=headers))
 
             # Summary table
@@ -447,6 +475,7 @@ def load(
     species_path: Union[None, str, Path] = None,
     synonyms_path: Union[None, str, Path] = None,
     xrefs_path: Union[None, str, Path] = None,
+    rels_path: Union[None, str, Path] = None,
     refs_table: Optional[str] = None,
     alts_table: Optional[str] = None,
     defs_table: Optional[str] = None,
@@ -454,6 +483,7 @@ def load(
     derived_table: Optional[str] = None,
     synonyms_table: Optional[str] = None,
     xrefs_table: Optional[str] = None,
+    rels_table: Optional[str] = None,
     test: bool = False,
     uri: Optional[str] = None,
 ) -> None:
@@ -472,6 +502,8 @@ def load(
     :param synonyms_path: Path to the syononyms table data
     :param xrefs_table: Name of the xrefs table
     :param xrefs_path: Path to the xrefs table data
+    :param rels_table: Name of the relations table
+    :param rels_path: Path to the relations table data
     :param test: Should only a test set of rows be uploaded? Defaults to false.
     :param uri: The URI of the database to connect to.
     """
@@ -483,9 +515,11 @@ def load(
         derived_table=derived_table,
         synonyms_table=synonyms_table,
         xrefs_table=xrefs_table,
+        rels_table=rels_table,
         uri=uri,
     )
     loader.load_xrefs(path=xrefs_path, test=test)
+    loader.load_rels(path=rels_path, test=test)
     loader.load_synonyms(path=synonyms_path, test=test)
     loader.load_alts(path=alts_path, test=test)
     loader.load_definition(path=defs_path, test=test)

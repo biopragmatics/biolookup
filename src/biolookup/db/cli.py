@@ -4,12 +4,24 @@
 
 Run with ``biolookup load``.
 """
+import logging
 
 import click
 from more_click import verbose_option
-from pyobo.resource_utils import ensure_alts, ensure_definitions, ensure_ooh_na_na
+from pyobo.resource_utils import (
+    ensure_alts,
+    ensure_definitions,
+    ensure_ooh_na_na,
+    ensure_inspector_javert,
+)
 
-from ..constants import ALTS_TABLE_NAME, DEFS_TABLE_NAME, REFS_TABLE_NAME, get_sqlalchemy_uri
+from ..constants import (
+    ALTS_TABLE_NAME,
+    DEFS_TABLE_NAME,
+    REFS_TABLE_NAME,
+    get_sqlalchemy_uri,
+    XREFS_NAME,
+)
 
 __all__ = [
     "load",
@@ -33,6 +45,13 @@ __all__ = [
     show_default=True,
     help="By default, load from Zenodo",
 )
+@click.option("--xrefs-table", default=XREFS_NAME, show_default=True)
+@click.option(
+    "--xrefs-path",
+    default=ensure_inspector_javert,
+    show_default=True,
+    help="By default, load from Zenodo",
+)
 @click.option("--test", is_flag=True, help="Test run with a small test subset")
 @verbose_option
 def load(
@@ -43,6 +62,8 @@ def load(
     alts_path: str,
     defs_table: str,
     defs_path: str,
+    xrefs_table: str,
+    xrefs_path: str,
     test: bool,
 ):
     """Load the SQL database."""
@@ -56,6 +77,8 @@ def load(
         alts_path=alts_path,
         defs_table=defs_table,
         defs_path=defs_path,
+        xrefs_table=xrefs_table,
+        xrefs_path=xrefs_path,
         test=test,
     )
 

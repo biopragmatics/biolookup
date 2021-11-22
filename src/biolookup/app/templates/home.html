@@ -35,7 +35,7 @@
                         <i class="fa fa-sync-alt"></i>
                         <h2><span class="count-alts" data-to="{{ alts_count }}"
                                   data-time="1000"></span>{{ alts_suffix }}</h2>
-                        <p class="count-text ">Alternative IDs</p>
+                        <p class="count-text ">Alt. IDs</p>
                     </div>
                     <div class="col">
                         <i class="fa fa-book"></i>
@@ -45,7 +45,7 @@
                     </div>
                     <div class="col">
                         <i class="fas fa-chess"></i>
-                        <h2><span class="count-defs" data-to="{{ synonyms_count }}"
+                        <h2><span class="count-synonyms" data-to="{{ synonyms_count }}"
                                   data-time="1000"></span>{{ synonyms_suffix }}</h2>
                         <p>Synonyms</p>
                     </div>
@@ -54,6 +54,12 @@
                         <h2><span class="count-xrefs" data-to="{{ xrefs_count }}"
                                   data-time="1000"></span>{{ xrefs_suffix }}</h2>
                         <p>Xrefs</p>
+                    </div>
+                    <div class="col">
+                        <i class="fas fa-project-diagram"></i>
+                        <h2><span class="count-rels" data-to="{{ rels_count }}"
+                                  data-time="1000"></span>{{ rels_suffix }}</h2>
+                        <p>Relations</p>
                     </div>
                     <div class="col">
                         <i class="fa fa-paw"></i>
@@ -153,6 +159,7 @@
             $('.count-species').counter();
             $('.count-synonyms').counter();
             $('.count-xrefs').counter();
+            $('.count-rels').counter();
         });
     </script>
 {% endblock %}

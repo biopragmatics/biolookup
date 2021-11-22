@@ -47,6 +47,7 @@ def home():
     species_count, species_suffix = _figure_number(backend.count_species())
     synonyms_count, synonyms_suffix = _figure_number(backend.count_synonyms())
     xrefs_count, xrefs_suffix = _figure_number(backend.count_xrefs())
+    rels_count, rels_suffix = _figure_number(backend.count_rels())
     return render_template(
         "home.html",
         name_count=name_count,
@@ -62,6 +63,8 @@ def home():
         synonyms_suffix=synonyms_suffix,
         xrefs_count=xrefs_count,
         xrefs_suffix=xrefs_suffix,
+        rels_count=rels_count,
+        rels_suffix=rels_suffix,
     )
 
 

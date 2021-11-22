@@ -2,6 +2,7 @@
 
 """Base class for backends."""
 
+import time
 from typing import Any, List, Mapping, Optional
 
 import bioregistry
@@ -44,6 +45,10 @@ class Backend:
         """Get a list of xrefs."""
         raise NotImplementedError
 
+    def get_rels(self, prefix: str, identifier: str) -> List[Mapping[str, str]]:
+        """Get a list of relations."""
+        raise NotImplementedError
+
     def summarize_names(self) -> Mapping[str, Any]:
         """Summarize the names."""
         raise NotImplementedError
@@ -68,6 +73,10 @@ class Backend:
         """Summarize the xrefs."""
         raise NotImplementedError
 
+    def summarize_rels(self) -> Mapping[str, Any]:
+        """Summarize the relations."""
+        raise NotImplementedError
+
     def count_all(self):
         """Count all."""
         self.count_prefixes()
@@ -77,6 +86,7 @@ class Backend:
         self.count_species()
         self.count_synonyms()
         self.count_xrefs()
+        self.count_rels()
 
     def count_names(self) -> Optional[int]:
         """Count the number of names in the database."""
@@ -98,6 +108,9 @@ class Backend:
 
     def count_xrefs(self) -> Optional[int]:
         """Count the number of xrefs in the database."""
+
+    def count_rels(self) -> Optional[int]:
+        """Count the number of relations in the database."""
 
     def lookup(self, curie: str, *, resolve_alternate: bool = True) -> Mapping[str, Any]:
         """Return the results and summary when resolving a CURIE string."""
@@ -157,6 +170,9 @@ class Backend:
         xrefs = self.get_xrefs(prefix, identifier)
         if xrefs:
             rv["xrefs"] = xrefs
+        rels = self.get_rels(prefix, identifier)
+        if rels:
+            rv["relations"] = rels
 
         return rv
 
@@ -170,6 +186,7 @@ class Backend:
         summary_species = self.summarize_species() if self.summarize_species is not None else {}
         summary_synonyms = self.summarize_synonyms() if self.summarize_synonyms is not None else {}
         summary_xrefs = self.summarize_xrefs() if self.summarize_xrefs is not None else {}
+        summary_rels = self.summarize_rels() if self.summarize_rels is not None else {}
         return pd.DataFrame(
             [
                 (
@@ -184,6 +201,7 @@ class Backend:
                     summary_species.get(prefix, 0),
                     summary_synonyms.get(prefix, 0),
                     summary_xrefs.get(prefix, 0),
+                    summary_rels.get(prefix, 0),
                 )
                 for prefix, names_count in summary_names.items()
             ],
@@ -199,5 +217,6 @@ class Backend:
                 "species",
                 "synonyms",
                 "xrefs",
+                "rels",
             ],
         )

@@ -17,6 +17,7 @@ from ..constants import (
     DEFS_TABLE_NAME,
     DERIVED_NAME,
     REFS_TABLE_NAME,
+    RELS_NAME,
     SPECIES_TABLE_NAME,
     SYNONYMS_NAME,
     XREFS_NAME,
@@ -56,6 +57,7 @@ class RawSQLBackend(Backend):
         derived_table: Optional[str] = None,
         synonyms_table: Optional[str] = None,
         xrefs_table: Optional[str] = None,
+        rels_table: Optional[str] = None,
     ):
         """Initialize the raw SQL backend.
 
@@ -67,6 +69,7 @@ class RawSQLBackend(Backend):
         :param derived_table: A name for the prefix-id-... derived table.
         :param synonyms_table: A name for the prefix-id-synonym table.
         :param xrefs_table: A name for the prefix-id-xprefix-xidentifier-provenance table.
+        :param rels_table: A name for the relation table.
         """
         self.engine = _ensure_engine(engine)
 
@@ -77,6 +80,7 @@ class RawSQLBackend(Backend):
         self.derived_table = derived_table or DERIVED_NAME
         self.synonyms_table = synonyms_table or SYNONYMS_NAME
         self.xrefs_table = xrefs_table or XREFS_NAME
+        self.rels_table = rels_table or RELS_NAME
 
     def _count_summary(self, table):
         return self._get_one(f"SELECT SUM(identifier_count) FROM {table}_summary;")  # noqa:S608
@@ -119,6 +123,11 @@ class RawSQLBackend(Backend):
         return self._count_summary(self.xrefs_table)
 
     @lru_cache(maxsize=1)
+    def count_rels(self) -> Optional[int]:
+        """Count relations using a SQL query to the relations summary table."""
+        return self._count_summary(self.rels_table)
+
+    @lru_cache(maxsize=1)
     def count_alts(self) -> Optional[int]:
         """Count alts using a SQL query to the alts summary table."""
         logger.info("counting alts")
@@ -152,6 +161,10 @@ class RawSQLBackend(Backend):
     def summarize_xrefs(self) -> Counter:
         """Return the results of a SQL query that dumps the xrefs summary table."""
         return self._get_summary(self.xrefs_table)
+
+    def summarize_rels(self) -> Counter:
+        """Return the results of a SQL query that dumps the relations summary table."""
+        return self._get_summary(self.rels_table)
 
     @lru_cache()
     def _get_summary(self, table) -> Counter:
@@ -223,6 +236,18 @@ class RawSQLBackend(Backend):
             "xref_identifier",
             "provenance",
             table=self.xrefs_table,
+            prefix=prefix,
+            identifier=identifier,
+        )
+
+    def get_rels(self, prefix: str, identifier: str) -> List[Mapping[str, str]]:
+        """Get relations with a SQL query to the relations table."""
+        return self._help_many_dict(
+            "relation_prefix",
+            "relation_identifier",
+            "target_prefix",
+            "target_identifier",
+            table=self.rels_table,
             prefix=prefix,
             identifier=identifier,
         )
