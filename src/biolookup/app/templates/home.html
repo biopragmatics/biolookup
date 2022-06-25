@@ -83,39 +83,39 @@
             </tr>
             </thead>
             <tr>
-                <td><a href="{{ url_for('biolookup.lookup', curie='DOID:14330' ) }}">DOID:14330</a></td>
+                <td><a href="{{ url_for('.entity', curie='DOID:14330' ) }}">DOID:14330</a></td>
                 <td>🟢 exact</td>
             </tr>
             <tr>
-                <td><a href="{{ url_for('biolookup.lookup', curie='doid:14330' ) }}">doid:14330</a></td>
+                <td><a href="{{ url_for('.entity', curie='doid:14330' ) }}">doid:14330</a></td>
                 <td>🟢 capitalization variant</td>
             </tr>
             <tr>
-                <td><a href="{{ url_for('biolookup.lookup', curie='DO:14330' ) }}">DO:14330</a></td>
+                <td><a href="{{ url_for('.entity', curie='DO:14330' ) }}">DO:14330</a></td>
                 <td>🟢 synonym identified in metaregistry</td>
             </tr>
             <tr>
-                <td><a href="{{ url_for('biolookup.lookup', curie='GO:0000501' ) }}">GO:0000501</a></td>
+                <td><a href="{{ url_for('.entity', curie='GO:0000501' ) }}">GO:0000501</a></td>
                 <td>🟢 secondary identifier mapped</td>
             </tr>
             <tr>
-                <td><a href="{{ url_for('biolookup.lookup', curie='GO:GO:0000501' ) }}">GO:GO:0000501</a></td>
+                <td><a href="{{ url_for('.entity', curie='GO:GO:0000501' ) }}">GO:GO:0000501</a></td>
                 <td>🟢 banana problem mapped</td>
             </tr>
             <tr>
-                <td><a href="{{ url_for('biolookup.lookup', curie='APO:0000155' ) }}">apo:0000155</a></td>
+                <td><a href="{{ url_for('.entity', curie='APO:0000155' ) }}">apo:0000155</a></td>
                 <td>🟡 able to look up name, but prefix is not listed on Identifiers.org</td>
             </tr>
             <tr>
-                <td><a href="{{ url_for('biolookup.lookup', curie='wikidata:Q11085' ) }}">wikidata:Q11085</a></td>
+                <td><a href="{{ url_for('.entity', curie='wikidata:Q11085' ) }}">wikidata:Q11085</a></td>
                 <td>🟡 able to generate Identifiers.org link, but name unavailable</td>
             </tr>
             <tr>
-                <td><a href="{{ url_for('biolookup.lookup', curie='DOID:00000' ) }}">DOID:00000</a></td>
+                <td><a href="{{ url_for('.entity', curie='DOID:00000' ) }}">DOID:00000</a></td>
                 <td>🔴 valid prefix, but invalid identifier</td>
             </tr>
             <tr>
-                <td><a href="{{ url_for('biolookup.lookup', curie='NNN:00000' ) }}">NNN:00000</a></td>
+                <td><a href="{{ url_for('.entity', curie='NNN:00000' ) }}">NNN:00000</a></td>
                 <td>🔴 invalid prefix</td>
             </tr>
         </table>

@@ -2,9 +2,38 @@
 
 {% block title %}{{ res.name }}{% endblock %}
 
+{% macro code_curie(prefix, identifier) -%}
+    <a href="{{ bioregistry.get_link(prefix, identifier) }}">
+        <code>{{ bioregistry.curie_to_str(prefix, identifier) }}</code>
+    </a>
+{% endmacro %}
+
 {% block container %}
     <div class="card">
-        <h5 class="card-header">Entity&nbsp;&nbsp;<i class="fas fa-angle-right"></i>&nbsp;&nbsp;{{ res.name }}</h5>
+        <div class="card-header">
+            <div class="row align-items-center">
+                <div class="col-8">
+                    <h5 style="margin: 0">
+                        Entity&nbsp;&nbsp;<i class="fas fa-angle-right"></i>&nbsp;&nbsp;{{ res.name }}
+                    </h5>
+                </div>
+                <div class="col-4 text-right">
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-dark dropdown-toggle" type="button"
+                                id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true"
+                                aria-expanded="false">
+                            Download
+                        </button>
+                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                            <a class="dropdown-item"
+                               href="{{ url_for('biolookup.lookup', curie=bioregistry.curie_to_str(res.prefix, res.identifier) ) }}">
+                                JSON <i class="fas fa-download"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div class="card-body">
             <dl>
                 <dt>Prefix</dt>
@@ -36,7 +65,23 @@
                     <dd>
                         <ul>
                             {% for xref in res.xrefs %}
-                                <li>{{ xref }}</li>
+                                <li>
+                                    {{ code_curie(xref["xref_prefix"], xref["xref_identifier"]) }}
+                                    (from {{ xref["source"] }})
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </dd>
+                {% endif %}
+                {% if res.relations %}
+                    <dt>Relations</dt>
+                    <dd>
+                        <ul>
+                            {% for relation in res.relations %}
+                                <li>
+                                    {{ code_curie(relation["relation_prefix"], relation["relation_identifier"]) }}
+                                    {{ code_curie(relation["target_prefix"], relation["target_identifier"]) }}
+                                </li>
                             {% endfor %}
                         </ul>
                     </dd>

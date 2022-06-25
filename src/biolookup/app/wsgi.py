@@ -192,6 +192,9 @@ def get_app_from_backend(backend: Backend) -> Flask:
     app.register_blueprint(ui)
     app.register_blueprint(biolookup_blueprint, url_prefix="/api")
 
+    # Make bioregistry available in all jinja templates
+    app.jinja_env.globals.update(bioregistry=bioregistry)
+
     @app.before_first_request
     def _before_first_request():
         logger.info("before_first_request")
