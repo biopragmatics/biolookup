@@ -2,17 +2,6 @@
 
 {% block title %}Biolookup Service Downloads{% endblock %}
 
-{% block styles %}
-    {{ super() }}
-    <link href="https://cdn.jsdelivr.net/npm/prismjs@1.23.0/themes/prism.css" rel="stylesheet"/>
-{% endblock %}
-
-{% block scripts %}
-    {{ super() }}
-    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.23.0/prism.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.23.0/plugins/autoloader/prism-autoloader.min.js"></script>
-{% endblock %}
-
 {% block content %}
     <h2>Downloads</h2>
     <p>
@@ -43,6 +32,7 @@
         <a href="https://doi.org/10.5281/zenodo.4662925"><img
                 src="https://zenodo.org/badge/DOI/10.5281/zenodo.4662925.svg" alt="DOI"></a>
     </p>
+
     <h3>Alternative Identifiers</h3>
     <p>
         The alternative identifiers dataframe has three columns: prefixes, identifiers, and alternative identifiers.
@@ -50,4 +40,31 @@
         <a href="https://doi.org/10.5281/zenodo.4661368"><img
                 src="https://zenodo.org/badge/DOI/10.5281/zenodo.4661368.svg" alt="DOI"></a>
     </p>
+
+    <h3>Synonyms</h3>
+    <p>
+        The synonyms dataframe has three columns: prefixes, identifiers, and synonyms.
+        <br/>
+        <a href="https://doi.org/10.5281/zenodo.5768614"><img
+                src="https://zenodo.org/badge/DOI/10.5281/zenodo.5768614.svg" alt="DOI"></a>
+    </p>
+
+    <h3>Cross-References</h3>
+    <p>
+        The cross-references dataframe has five columns: prefixes, identifiers, xref prefix, xref identifier, and
+        source.
+        <br/>
+        <a href="https://doi.org/10.5281/zenodo.5768625"><img
+                src="https://zenodo.org/badge/DOI/10.5281/zenodo.5768625.svg" alt="DOI"></a>
+    </p>
+
+    <h3>Relations</h3>
+    <p>
+        The cross-references dataframe has six columns: prefixes, identifiers, relation prefix, relation identifier,
+        target prefix, and target identifier.
+        <br/>
+        <a href="https://doi.org/10.5281/zenodo.5770315"><img
+                src="https://zenodo.org/badge/DOI/10.5281/zenodo.5770315.svg" alt="DOI"></a>
+    </p>
+
 {% endblock %}
