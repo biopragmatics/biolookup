@@ -18,6 +18,7 @@ from textwrap import dedent
 from typing import Iterable, Optional, Union
 
 import click
+import pystow
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 from pyobo.resource_utils import (
     ensure_alts,
@@ -46,6 +47,7 @@ from ..constants import (
 
 __all__ = [
     "load",
+    "load_date",
 ]
 
 logger = logging.getLogger(__name__)
@@ -95,6 +97,7 @@ class Loader:
         :param derived_table: Name of the prefix-id-... derived table.
         :param synonyms_table: Name of the synonyms table
         :param xrefs_table: Name of the xrefs table
+        :param rels_table: Name of the relations table
         """
         self.engine = _ensure_engine(uri)
         self.alts_table = alts_table or ALTS_TABLE_NAME
@@ -325,7 +328,7 @@ class Loader:
             echo("Commit ended")
 
     @staticmethod
-    def _get_target_col_type(use_varchar: bool, target_col_size: int) -> str:
+    def _get_target_col_type(use_varchar: bool, target_col_size: Optional[int] = None) -> str:
         if use_varchar:
             if target_col_size is None:
                 raise ValueError("target_col_size should not be none when use_varchar=True")
@@ -467,6 +470,21 @@ class Loader:
                 cursor.execute(drop_species)
 
 
+def load_date(*, date: str, **kwargs):
+    """Load the database from the given date."""
+    directory = pystow.join("pyobo", "database", date)
+    return load(
+        refs_path=directory.joinpath("names.tsv.gz"),
+        alts_path=directory.joinpath("alts.tsv.gz"),
+        defs_path=directory.joinpath("definitions.tsv.gz"),
+        species_path=directory.joinpath("species.tsv.gz"),
+        synonyms_path=directory.joinpath("synonyms.tsv.gz"),
+        xrefs_path=directory.joinpath("xrefs.tsv.gz"),
+        rels_path=directory.joinpath("relations.tsv.gz"),
+        **kwargs,
+    )
+
+
 def load(
     *,
     refs_path: Union[None, str, Path] = None,
@@ -518,11 +536,11 @@ def load(
         rels_table=rels_table,
         uri=uri,
     )
-    loader.load_xrefs(path=xrefs_path, test=test)
-    loader.load_rels(path=rels_path, test=test)
-    loader.load_synonyms(path=synonyms_path, test=test)
-    loader.load_alts(path=alts_path, test=test)
-    loader.load_definition(path=defs_path, test=test)
+    # loader.load_xrefs(path=xrefs_path, test=test)
+    # loader.load_rels(path=rels_path, test=test)
+    # loader.load_synonyms(path=synonyms_path, test=test)
+    # loader.load_alts(path=alts_path, test=test)
+    # loader.load_definition(path=defs_path, test=test)
     loader.load_name(path=refs_path, test=test)
     loader.load_species(path=species_path, test=test)
     loader.derive_table()

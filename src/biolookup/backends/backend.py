@@ -2,12 +2,10 @@
 
 """Base class for backends."""
 
-import time
 from typing import Any, List, Mapping, Optional
 
 import bioregistry
 import pandas as pd
-
 
 __all__ = [
     "Backend",

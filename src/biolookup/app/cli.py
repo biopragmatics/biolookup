@@ -78,8 +78,8 @@ def web(
     from .wsgi import get_app
 
     if test:
-        from pyobo import get_id_name_mapping, get_alts_to_id, get_id_definition_mapping
         import pandas as pd
+        from pyobo import get_alts_to_id, get_id_definition_mapping, get_id_name_mapping
 
         prefixes = ["hgnc", "chebi", "doid", "go", "uniprot"]
         name_data = pd.DataFrame(

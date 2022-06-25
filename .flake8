@@ -9,6 +9,7 @@ ignore =
     S404
     S603
     W503 # Line break before binary operator (flake8 is wrong)
+    B019 # lru cache is fine
 exclude =
     .tox,
     .git,
