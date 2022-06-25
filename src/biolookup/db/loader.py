@@ -19,7 +19,12 @@ from typing import Optional, Union
 
 import click
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
-from pyobo.resource_utils import ensure_alts, ensure_definitions, ensure_ooh_na_na, ensure_species
+from pyobo.resource_utils import (
+    ensure_alts,
+    ensure_definitions,
+    ensure_ooh_na_na,
+    ensure_species,
+)
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from tabulate import tabulate
