@@ -47,14 +47,14 @@
                     <td><code>{{ prefix }}</code></td>
                     <td>
                         {% if homepage %}
-                            <a href="{{ homepage }}">{{ name }}</a>
+                            <a href="{{ prefix }}">{{ name }}</a>
                         {% else %}
                             {{ name }}
                         {% endif %}
                     </td>
                     <td>
                         {% if example %}
-                            <a href="{{ url_for('biolookup.lookup', curie=prefix + ':' + example ) }}">{{ example }}</a>
+                            <a href="{{ url_for('.entity', curie=prefix + ':' + example ) }}">{{ example }}</a>
                         {% endif %}
                     </td>
                     <td align="right">{{ "{:,}".format(names)}}</td>
