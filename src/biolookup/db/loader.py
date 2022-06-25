@@ -536,11 +536,11 @@ def load(
         rels_table=rels_table,
         uri=uri,
     )
-    # loader.load_xrefs(path=xrefs_path, test=test)
-    # loader.load_rels(path=rels_path, test=test)
-    # loader.load_synonyms(path=synonyms_path, test=test)
-    # loader.load_alts(path=alts_path, test=test)
-    # loader.load_definition(path=defs_path, test=test)
+    loader.load_xrefs(path=xrefs_path, test=test)
+    loader.load_rels(path=rels_path, test=test)
+    loader.load_synonyms(path=synonyms_path, test=test)
+    loader.load_alts(path=alts_path, test=test)
+    loader.load_definition(path=defs_path, test=test)
     loader.load_name(path=refs_path, test=test)
     loader.load_species(path=species_path, test=test)
     loader.derive_table()
