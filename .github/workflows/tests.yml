@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ 3.8, 3.9 ]
+        python-version: [ "3.8", "3.10" ]
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ 3.8, 3.9 ]
+        python-version: [ "3.8", "3.10" ]
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
@@ -44,14 +44,14 @@ jobs:
       - name: Check docstring coverage
         run: tox -e docstr-coverage
       - name: Check documentation build with Sphinx
-        run: tox -e docs
+        run: tox -e docs-test
   tests:
     name: Tests
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ ubuntu-latest ]
-        python-version: [ 3.8, 3.9 ]
+        python-version: [ "3.8", "3.10" ]
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}

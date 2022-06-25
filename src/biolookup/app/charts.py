@@ -10,7 +10,6 @@ from matplotlib_venn import venn2
 
 from biolookup import backends
 
-
 HERE = pathlib.Path(__file__).parent.resolve()
 STATIC = HERE.joinpath("static")
 
