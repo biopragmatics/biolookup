@@ -3,7 +3,6 @@
 """Base class for backends."""
 
 import logging
-from abc import ABC
 from typing import Any, List, Mapping, Optional
 
 import bioregistry

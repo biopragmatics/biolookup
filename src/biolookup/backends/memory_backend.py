@@ -34,6 +34,7 @@ class MemoryBackend(Backend):
         :param get_id_name_mapping: A function for getting id-name mappings
         :param get_id_species_mapping: A function for getting id-species mappings
         :param get_alts_to_id: A function for getting alts-id mappings
+        :param get_id_synonyms_mapping: A function for getting id-synonyms mappings
         :param summarize_names: A function for summarizing references
         :param summarize_alts: A function for summarizing alts
         :param summarize_definitions: A function for summarizing definitions
