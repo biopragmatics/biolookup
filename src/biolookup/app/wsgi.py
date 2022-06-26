@@ -45,6 +45,9 @@ def home():
     alts_count, alts_suffix = _figure_number(backend.count_alts())
     defs_count, defs_suffix = _figure_number(backend.count_definitions())
     species_count, species_suffix = _figure_number(backend.count_species())
+    synonyms_count, synonyms_suffix = _figure_number(backend.count_synonyms())
+    xrefs_count, xrefs_suffix = _figure_number(backend.count_xrefs())
+    rels_count, rels_suffix = _figure_number(backend.count_rels())
     return render_template(
         "home.html",
         name_count=name_count,
@@ -56,6 +59,12 @@ def home():
         definition_suffix=defs_suffix,
         species_count=species_count,
         species_suffix=species_suffix,
+        synonyms_count=synonyms_count,
+        synonyms_suffix=synonyms_suffix,
+        xrefs_count=xrefs_count,
+        xrefs_suffix=xrefs_suffix,
+        rels_count=rels_count,
+        rels_suffix=rels_suffix,
     )
 
 
@@ -182,6 +191,9 @@ def get_app_from_backend(backend: Backend) -> Flask:
     app.config["resolver_backend"] = backend
     app.register_blueprint(ui)
     app.register_blueprint(biolookup_blueprint, url_prefix="/api")
+
+    # Make bioregistry available in all jinja templates
+    app.jinja_env.globals.update(bioregistry=bioregistry)
 
     @app.before_first_request
     def _before_first_request():

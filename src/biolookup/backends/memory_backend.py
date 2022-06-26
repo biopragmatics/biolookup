@@ -2,7 +2,9 @@
 
 """An in-memory backend for the Biolookup Service based on PyOBO functions."""
 
-from typing import Any, Callable, Mapping, Optional
+from typing import Any, Callable, List, Mapping, Optional
+
+import pyobo
 
 from .backend import Backend
 
@@ -20,6 +22,7 @@ class MemoryBackend(Backend):
         get_id_name_mapping,
         get_id_species_mapping,
         get_alts_to_id,
+        get_id_synonyms_mapping=None,
         summarize_names: Optional[Callable[[], Mapping[str, Any]]],
         summarize_alts: Optional[Callable[[], Mapping[str, Any]]] = None,
         summarize_definitions: Optional[Callable[[], Mapping[str, Any]]] = None,
@@ -31,6 +34,7 @@ class MemoryBackend(Backend):
         :param get_id_name_mapping: A function for getting id-name mappings
         :param get_id_species_mapping: A function for getting id-species mappings
         :param get_alts_to_id: A function for getting alts-id mappings
+        :param get_id_synonyms_mapping: A function for getting id-synonyms mappings
         :param summarize_names: A function for summarizing references
         :param summarize_alts: A function for summarizing alts
         :param summarize_definitions: A function for summarizing definitions
@@ -41,6 +45,7 @@ class MemoryBackend(Backend):
         self.get_id_species_mapping = get_id_species_mapping
         self.get_alts_to_id = get_alts_to_id
         self.get_id_definition_mapping = get_id_definition_mapping
+        self.get_id_synonyms_mapping = get_id_synonyms_mapping or pyobo.get_id_synonyms_mapping
         self._summarize_names = summarize_names
         self._summarize_alts = summarize_alts
         self._summarize_definitions = summarize_definitions
@@ -71,6 +76,11 @@ class MemoryBackend(Backend):
             return None
         id_definition_mapping = self.get_id_definition_mapping(prefix) or {}
         return id_definition_mapping.get(identifier)
+
+    def get_synonyms(self, prefix: str, identifier: str) -> List[str]:
+        """Get the synonyms with the id/synonym getter, if available."""
+        x = self.get_id_synonyms_mapping(prefix) or {}
+        return x.get(identifier, [])
 
     def summarize_names(self) -> Mapping[str, Any]:
         """Summarize the names with the internal name summary function, if available."""

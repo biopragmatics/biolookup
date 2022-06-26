@@ -2,6 +2,7 @@
 
 """Base class for backends."""
 
+import logging
 from typing import Any, List, Mapping, Optional
 
 import bioregistry
@@ -10,6 +11,9 @@ import pandas as pd
 __all__ = [
     "Backend",
 ]
+
+
+logger = logging.getLogger(__name__)
 
 
 class Backend:
@@ -37,11 +41,18 @@ class Backend:
 
     def get_synonyms(self, prefix: str, identifier: str) -> List[str]:
         """Get a list of synonyms."""
-        raise NotImplementedError
+        logger.warning(f"getting synonyms is not yet implemented for {self.__class__}")
+        return []
 
     def get_xrefs(self, prefix: str, identifier: str) -> List[Mapping[str, str]]:
         """Get a list of xrefs."""
-        raise NotImplementedError
+        logger.warning(f"getting xrefs is not yet implemented for {self.__class__}")
+        return []
+
+    def get_rels(self, prefix: str, identifier: str) -> List[Mapping[str, str]]:
+        """Get a list of relations."""
+        logger.warning(f"getting relations is not yet implemented for {self.__class__}")
+        return []
 
     def summarize_names(self) -> Mapping[str, Any]:
         """Summarize the names."""
@@ -59,6 +70,18 @@ class Backend:
         """Summarize the species."""
         raise NotImplementedError
 
+    def summarize_synonyms(self) -> Mapping[str, Any]:
+        """Summarize the synonyms."""
+        raise NotImplementedError
+
+    def summarize_xrefs(self) -> Mapping[str, Any]:
+        """Summarize the xrefs."""
+        raise NotImplementedError
+
+    def summarize_rels(self) -> Mapping[str, Any]:
+        """Summarize the relations."""
+        raise NotImplementedError
+
     def count_all(self):
         """Count all."""
         self.count_prefixes()
@@ -66,6 +89,9 @@ class Backend:
         self.count_alts()
         self.count_names()
         self.count_species()
+        self.count_synonyms()
+        self.count_xrefs()
+        self.count_rels()
 
     def count_names(self) -> Optional[int]:
         """Count the number of names in the database."""
@@ -81,6 +107,15 @@ class Backend:
 
     def count_species(self) -> Optional[int]:
         """Count the number of species links in the database."""
+
+    def count_synonyms(self) -> Optional[int]:
+        """Count the number of synonyms in the database."""
+
+    def count_xrefs(self) -> Optional[int]:
+        """Count the number of xrefs in the database."""
+
+    def count_rels(self) -> Optional[int]:
+        """Count the number of relations in the database."""
 
     def lookup(self, curie: str, *, resolve_alternate: bool = True) -> Mapping[str, Any]:
         """Return the results and summary when resolving a CURIE string."""
@@ -134,6 +169,15 @@ class Backend:
         species = self.get_species(prefix, identifier)
         if species:
             rv["species"] = species
+        synonyms = self.get_synonyms(prefix, identifier)
+        if synonyms:
+            rv["synonyms"] = synonyms
+        xrefs = self.get_xrefs(prefix, identifier)
+        if xrefs:
+            rv["xrefs"] = xrefs
+        rels = self.get_rels(prefix, identifier)
+        if rels:
+            rv["relations"] = rels
 
         return rv
 
@@ -145,6 +189,9 @@ class Backend:
             self.summarize_definitions() if self.summarize_definitions is not None else {}
         )
         summary_species = self.summarize_species() if self.summarize_species is not None else {}
+        summary_synonyms = self.summarize_synonyms() if self.summarize_synonyms is not None else {}
+        summary_xrefs = self.summarize_xrefs() if self.summarize_xrefs is not None else {}
+        summary_rels = self.summarize_rels() if self.summarize_rels is not None else {}
         return pd.DataFrame(
             [
                 (
@@ -157,6 +204,9 @@ class Backend:
                     summary_alts.get(prefix, 0),
                     summary_defs.get(prefix, 0),
                     summary_species.get(prefix, 0),
+                    summary_synonyms.get(prefix, 0),
+                    summary_xrefs.get(prefix, 0),
+                    summary_rels.get(prefix, 0),
                 )
                 for prefix, names_count in summary_names.items()
             ],
@@ -170,5 +220,8 @@ class Backend:
                 "alts",
                 "defs",
                 "species",
+                "synonyms",
+                "xrefs",
+                "rels",
             ],
         )

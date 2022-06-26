@@ -36,6 +36,9 @@ def get_backend(
     alts_table: Optional[str] = None,
     defs_table: Optional[str] = None,
     species_table: Optional[str] = None,
+    synonyms_table: Optional[str] = None,
+    xrefs_table: Optional[str] = None,
+    rels_table: Optional[str] = None,
 ) -> Backend:
     """Get the backend based on the input data."""
     if sql:
@@ -46,6 +49,9 @@ def get_backend(
             alts_table=alts_table,
             defs_table=defs_table,
             species_table=species_table,
+            synonyms_table=synonyms_table,
+            xrefs_table=xrefs_table,
+            rels_table=rels_table,
         )
 
     if lazy:

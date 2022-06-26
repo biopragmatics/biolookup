@@ -35,13 +35,31 @@
                         <i class="fa fa-sync-alt"></i>
                         <h2><span class="count-alts" data-to="{{ alts_count }}"
                                   data-time="1000"></span>{{ alts_suffix }}</h2>
-                        <p class="count-text ">Alternative IDs</p>
+                        <p class="count-text ">Alt. IDs</p>
                     </div>
                     <div class="col">
                         <i class="fa fa-book"></i>
                         <h2><span class="count-defs" data-to="{{ definition_count }}"
                                   data-time="1000"></span>{{ definition_suffix }}</h2>
                         <p>Definitions</p>
+                    </div>
+                    <div class="col">
+                        <i class="fas fa-chess"></i>
+                        <h2><span class="count-synonyms" data-to="{{ synonyms_count }}"
+                                  data-time="1000"></span>{{ synonyms_suffix }}</h2>
+                        <p>Synonyms</p>
+                    </div>
+                    <div class="col">
+                        <i class="fas fa-people-arrows"></i>
+                        <h2><span class="count-xrefs" data-to="{{ xrefs_count }}"
+                                  data-time="1000"></span>{{ xrefs_suffix }}</h2>
+                        <p>Xrefs</p>
+                    </div>
+                    <div class="col">
+                        <i class="fas fa-project-diagram"></i>
+                        <h2><span class="count-rels" data-to="{{ rels_count }}"
+                                  data-time="1000"></span>{{ rels_suffix }}</h2>
+                        <p>Relations</p>
                     </div>
                     <div class="col">
                         <i class="fa fa-paw"></i>
@@ -65,39 +83,39 @@
             </tr>
             </thead>
             <tr>
-                <td><a href="{{ url_for('biolookup.lookup', curie='DOID:14330' ) }}">DOID:14330</a></td>
+                <td><a href="{{ url_for('.entity', curie='DOID:14330' ) }}">DOID:14330</a></td>
                 <td>🟢 exact</td>
             </tr>
             <tr>
-                <td><a href="{{ url_for('biolookup.lookup', curie='doid:14330' ) }}">doid:14330</a></td>
+                <td><a href="{{ url_for('.entity', curie='doid:14330' ) }}">doid:14330</a></td>
                 <td>🟢 capitalization variant</td>
             </tr>
             <tr>
-                <td><a href="{{ url_for('biolookup.lookup', curie='DO:14330' ) }}">DO:14330</a></td>
+                <td><a href="{{ url_for('.entity', curie='DO:14330' ) }}">DO:14330</a></td>
                 <td>🟢 synonym identified in metaregistry</td>
             </tr>
             <tr>
-                <td><a href="{{ url_for('biolookup.lookup', curie='GO:0000501' ) }}">GO:0000501</a></td>
+                <td><a href="{{ url_for('.entity', curie='GO:0000501' ) }}">GO:0000501</a></td>
                 <td>🟢 secondary identifier mapped</td>
             </tr>
             <tr>
-                <td><a href="{{ url_for('biolookup.lookup', curie='GO:GO:0000501' ) }}">GO:GO:0000501</a></td>
+                <td><a href="{{ url_for('.entity', curie='GO:GO:0000501' ) }}">GO:GO:0000501</a></td>
                 <td>🟢 banana problem mapped</td>
             </tr>
             <tr>
-                <td><a href="{{ url_for('biolookup.lookup', curie='APO:0000155' ) }}">apo:0000155</a></td>
+                <td><a href="{{ url_for('.entity', curie='APO:0000155' ) }}">apo:0000155</a></td>
                 <td>🟡 able to look up name, but prefix is not listed on Identifiers.org</td>
             </tr>
             <tr>
-                <td><a href="{{ url_for('biolookup.lookup', curie='wikidata:Q11085' ) }}">wikidata:Q11085</a></td>
+                <td><a href="{{ url_for('.entity', curie='wikidata:Q11085' ) }}">wikidata:Q11085</a></td>
                 <td>🟡 able to generate Identifiers.org link, but name unavailable</td>
             </tr>
             <tr>
-                <td><a href="{{ url_for('biolookup.lookup', curie='DOID:00000' ) }}">DOID:00000</a></td>
+                <td><a href="{{ url_for('.entity', curie='DOID:00000' ) }}">DOID:00000</a></td>
                 <td>🔴 valid prefix, but invalid identifier</td>
             </tr>
             <tr>
-                <td><a href="{{ url_for('biolookup.lookup', curie='NNN:00000' ) }}">NNN:00000</a></td>
+                <td><a href="{{ url_for('.entity', curie='NNN:00000' ) }}">NNN:00000</a></td>
                 <td>🔴 invalid prefix</td>
             </tr>
         </table>
@@ -139,6 +157,9 @@
             $('.count-alts').counter();
             $('.count-defs').counter();
             $('.count-species').counter();
+            $('.count-synonyms').counter();
+            $('.count-xrefs').counter();
+            $('.count-rels').counter();
         });
     </script>
 {% endblock %}

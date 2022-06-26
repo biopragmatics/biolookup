@@ -37,27 +37,33 @@
                 <th scope="col">Alts</th>
                 <th scope="col">Definitions</th>
                 <th scope="col">Species</th>
+                <th scope="col">Synonyms</th>
+                <th scope="col">Xrefs</th>
+                <th scope="col">Relations</th>
             </tr>
             </thead>
-            {% for prefix, name, homepage, example, link, names, alts, defs, species in summary_df.values %}
+            {% for prefix, name, homepage, example, link, names, alts, defs, species, synonyms, xrefs, rels in summary_df.values %}
                 <tr>
                     <td><code>{{ prefix }}</code></td>
                     <td>
                         {% if homepage %}
-                            <a href="{{ homepage }}">{{ name }}</a>
+                            <a href="{{ prefix }}">{{ name }}</a>
                         {% else %}
                             {{ name }}
                         {% endif %}
                     </td>
                     <td>
                         {% if example %}
-                            <a href="{{ url_for('biolookup.lookup', curie=prefix + ':' + example ) }}">{{ example }}</a>
+                            <a href="{{ url_for('.entity', curie=prefix + ':' + example ) }}">{{ example }}</a>
                         {% endif %}
                     </td>
                     <td align="right">{{ "{:,}".format(names)}}</td>
                     <td align="right">{{ "{:,}".format(alts) }}</td>
                     <td align="right">{{ "{:,}".format(defs) }}</td>
                     <td align="right">{{ "{:,}".format(species) }}</td>
+                    <td align="right">{{ "{:,}".format(synonyms) }}</td>
+                    <td align="right">{{ "{:,}".format(xrefs) }}</td>
+                    <td align="right">{{ "{:,}".format(rels) }}</td>
                 </tr>
             {% endfor %}
         </table>

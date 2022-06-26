@@ -51,11 +51,14 @@ SPECIES = [
     ("hgnc", "10021", "9606"),
     ("hgnc", "10023", "9606"),
 ]
+SYNONYMS = []
+XREFS = []
+RELS = []
 
 
-def _write(path, data, last):
+def _write(path, data, *last):
     with gzip.open(path, "wt") as file:
-        print("prefix", "identifier", last, sep="\t", file=file)
+        print("prefix", "identifier", *last, sep="\t", file=file)
         for line in data:
             print(*line, sep="\t", file=file)
 
@@ -125,6 +128,7 @@ class BackendTestCase(unittest.TestCase):
 
     def assert_go_example(self, r):
         """Run test of the canonical GO example."""
+        self.assertIsNotNone(r)
         self.assertEqual("go", r["prefix"])
         self.assertEqual("0000073", r["identifier"])
         self.assertEqual("initial mitotic spindle pole body separation", r["name"])
@@ -153,26 +157,48 @@ class TestRawSQLBackend(BackendTestCase):
         self.alts_table = "alts"
         self.defs_table = "defs"
         self.species_table = "species"
+        self.synonyms_table = "synonyms"
+        self.xrefs_table = "xrefs"
+        self.rels_table = "rels"
         with tempfile.TemporaryDirectory() as directory:
             directory = Path(directory)
             refs_path = directory / "refs.tsv.gz"
             alts_path = directory / "alts.tsv.gz"
             defs_path = directory / "defs.tsv.gz"
             species_path = directory / "species.tsv.gz"
+            synonyms_path = directory / "synonyms.tsv.gz"
+            xrefs_path = directory / "xrefs.tsv.gz"
+            rels_path = directory / "rels.tsv.gz"
             _write(refs_path, REFS, "name")
             _write(alts_path, ALTS, "alt")
             _write(defs_path, DEFS, "definition")
             _write(species_path, SPECIES, "species")
+            _write(synonyms_path, SYNONYMS, "synonym")
+            _write(xrefs_path, XREFS, "xref_prefix", "xref_identifier", "provenance")
+            _write(
+                rels_path,
+                RELS,
+                "relation_prefix",
+                "relation_identifier",
+                "object_prefix",
+                "object_identifier",
+            )
             loader.load(
                 uri=TEST_URI,
                 refs_path=refs_path,
                 alts_path=alts_path,
                 defs_path=defs_path,
                 species_path=species_path,
+                synonyms_path=synonyms_path,
+                xrefs_path=xrefs_path,
+                rels_path=rels_path,
                 refs_table=self.refs_table,
                 alts_table=self.alts_table,
                 defs_table=self.defs_table,
                 species_table=self.species_table,
+                synonyms_table=self.synonyms_table,
+                xrefs_table=self.xrefs_table,
+                rels_table=self.rels_table,
             )
             self.backend = get_backend(
                 sql=True,
@@ -181,6 +207,9 @@ class TestRawSQLBackend(BackendTestCase):
                 alts_table=self.alts_table,
                 defs_table=self.defs_table,
                 species_table=self.species_table,
+                synonyms_table=self.synonyms_table,
+                xrefs_table=self.xrefs_table,
+                rels_table=self.rels_table,
             )
 
     def test_backend(self):
