@@ -48,7 +48,7 @@
                 {% endif %}
                 {% if res.species %}
                     <dt>Species</dt>
-                    <dd>{{ res.species }}</dd>
+                    <dd>{{ code_curie("ncbitaxon", res.species) }}</dd>
                 {% endif %}
                 {% if res.synonyms %}
                     <dt>Synonyms</dt>
