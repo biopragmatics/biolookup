@@ -3,9 +3,14 @@
 {% block title %}{{ res.name }}{% endblock %}
 
 {% macro code_curie(prefix, identifier) -%}
-    <a href="{{ bioregistry.get_link(prefix, identifier) }}">
+    {% set br_link = get_bioregistry_iri(prefix, identifier) %}
+    {% if br_link %}
+        <a href="{{ br_link }}">
+            <code>{{ bioregistry.curie_to_str(prefix, identifier) }}</code>
+        </a>
+    {% else %}
         <code>{{ bioregistry.curie_to_str(prefix, identifier) }}</code>
-    </a>
+    {% endif %}
 {% endmacro %}
 
 {% block container %}
