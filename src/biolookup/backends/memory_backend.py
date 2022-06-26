@@ -80,7 +80,7 @@ class MemoryBackend(Backend):
     def get_synonyms(self, prefix: str, identifier: str) -> List[str]:
         """Get the synonyms with the id/synonym getter, if available."""
         x = self.get_id_synonyms_mapping(prefix) or {}
-        return x.get(identifier)
+        return x.get(identifier, [])
 
     def summarize_names(self) -> Mapping[str, Any]:
         """Summarize the names with the internal name summary function, if available."""
