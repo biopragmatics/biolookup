@@ -6,7 +6,7 @@ import logging
 import time
 from collections import Counter
 from functools import lru_cache
-from typing import Iterable, List, Mapping, Optional, Tuple, Union
+from typing import Any, Iterable, List, Mapping, Optional, Tuple, Union
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
@@ -31,11 +31,13 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 
-def _ensure_engine(engine: Union[None, str, Engine]) -> Engine:
+def _ensure_engine(
+    engine: Union[None, str, Engine], engine_kwargs: Optional[Mapping[str, Any]] = None
+) -> Engine:
     if engine is None:
-        return create_engine(get_sqlalchemy_uri())
+        return create_engine(get_sqlalchemy_uri(), **(engine_kwargs or {}))
     elif isinstance(engine, str):
-        return create_engine(engine)
+        return create_engine(engine, **(engine_kwargs or {}))
     else:
         return engine
 
@@ -50,6 +52,7 @@ class RawSQLBackend(Backend):
         self,
         engine: Union[None, str, Engine] = None,
         *,
+        engine_kwargs: Optional[Mapping[str, Any]] = None,
         refs_table: Optional[str] = None,
         alts_table: Optional[str] = None,
         defs_table: Optional[str] = None,
@@ -62,6 +65,7 @@ class RawSQLBackend(Backend):
         """Initialize the raw SQL backend.
 
         :param engine: An engine, connection string, or None if you want the default.
+        :param engine_kwargs: Kwargs for making the engine, if engine is given as a string or None
         :param refs_table: A name for the references (prefix-id-name) table. Defaults to 'obo_reference'
         :param alts_table: A name for the alts (prefix-id-alt) table. Defaults to 'obo_alt'
         :param defs_table: A name for the defs (prefix-id-def) table. Defaults to 'obo_def'
@@ -71,7 +75,7 @@ class RawSQLBackend(Backend):
         :param xrefs_table: A name for the prefix-id-xprefix-xidentifier-provenance table.
         :param rels_table: A name for the relation table.
         """
-        self.engine = _ensure_engine(engine)
+        self.engine = _ensure_engine(engine, engine_kwargs=engine_kwargs)
 
         self.refs_table = refs_table or REFS_TABLE_NAME
         self.alts_table = alts_table or ALTS_TABLE_NAME
@@ -275,5 +279,5 @@ class RawSQLBackend(Backend):
         """
         )  # noqa:S608
         with self.engine.connect() as connection:
-            results = connection.execute(sql, prefix=prefix, identifier=identifier).fetchmany()
+            results = connection.execute(sql, prefix=prefix, identifier=identifier).fetchall()
         return results
