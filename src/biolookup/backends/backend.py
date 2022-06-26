@@ -2,6 +2,7 @@
 
 """Base class for backends."""
 
+from abc import ABC
 from typing import Any, List, Mapping, Optional
 
 import bioregistry
@@ -12,7 +13,7 @@ __all__ = [
 ]
 
 
-class Backend:
+class Backend(ABC):
     """A resolution service."""
 
     def has_prefix(self, prefix: str) -> bool:

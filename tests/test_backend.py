@@ -128,6 +128,7 @@ class BackendTestCase(unittest.TestCase):
 
     def assert_go_example(self, r):
         """Run test of the canonical GO example."""
+        self.assertIsNotNone(r)
         self.assertEqual("go", r["prefix"])
         self.assertEqual("0000073", r["identifier"])
         self.assertEqual("initial mitotic spindle pole body separation", r["name"])
