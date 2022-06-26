@@ -2,6 +2,7 @@
 
 """Base class for backends."""
 
+import logging
 from abc import ABC
 from typing import Any, List, Mapping, Optional
 
@@ -13,7 +14,10 @@ __all__ = [
 ]
 
 
-class Backend(ABC):
+logger = logging.getLogger(__name__)
+
+
+class Backend:
     """A resolution service."""
 
     def has_prefix(self, prefix: str) -> bool:
@@ -38,15 +42,18 @@ class Backend(ABC):
 
     def get_synonyms(self, prefix: str, identifier: str) -> List[str]:
         """Get a list of synonyms."""
-        raise NotImplementedError
+        logger.warning(f"getting synonyms is not yet implemented for {self.__class__}")
+        return []
 
     def get_xrefs(self, prefix: str, identifier: str) -> List[Mapping[str, str]]:
         """Get a list of xrefs."""
-        raise NotImplementedError
+        logger.warning(f"getting xrefs is not yet implemented for {self.__class__}")
+        return []
 
     def get_rels(self, prefix: str, identifier: str) -> List[Mapping[str, str]]:
         """Get a list of relations."""
-        raise NotImplementedError
+        logger.warning(f"getting relations is not yet implemented for {self.__class__}")
+        return []
 
     def summarize_names(self) -> Mapping[str, Any]:
         """Summarize the names."""
