@@ -67,7 +67,7 @@
                             {% for xref in res.xrefs %}
                                 <li>
                                     {{ code_curie(xref["xref_prefix"], xref["xref_identifier"]) }}
-                                    (from {{ xref["source"] }})
+                                    (from {{ xref["provenance"] }})
                                 </li>
                             {% endfor %}
                         </ul>
