@@ -90,6 +90,9 @@ Funding = "https://github.com/sponsors/cthoyt"
 [project.scripts]
 biolookup = "biolookup.cli:main"
 
+[tool.uv.sources]
+pyobo = { git = "https://github.com/biopragmatics/pyobo" }
+
 [tool.cruft]
 skip = [
     "**/__init__.py",
