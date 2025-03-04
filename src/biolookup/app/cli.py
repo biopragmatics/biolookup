@@ -8,12 +8,9 @@ import sys
 
 import click
 from more_click import (
-    debug_option,
     host_option,
     port_option,
-    run_app,
     verbose_option,
-    with_gunicorn_option,
 )
 
 from ..constants import MODULE
@@ -43,9 +40,7 @@ LOG_PATH = MODULE.join(name="log.txt")
 @click.option("--lazy", is_flag=True, help="do no load full cache into memory automatically")
 @click.option("--test", is_flag=True, help="run in test mode with only a few datasets")
 @click.option("--workers", type=int, help="number of workers to use in --gunicorn mode")
-@with_gunicorn_option  # type:ignore[misc]
 @verbose_option  # type:ignore[misc]
-@debug_option  # type:ignore[misc]
 def web(
     port: str,
     host: str,
@@ -58,12 +53,12 @@ def web(
     alts_data: str | None,
     defs_data: str | None,
     test: bool,
-    with_gunicorn: bool,
     lazy: bool,
     workers: int,
-    debug: bool,
 ) -> None:
     """Run the Biolookup Service."""
+    import uvicorn
+
     if test:
         if lazy:
             click.secho("Can not run in --test and --lazy mode at the same time", fg="red")
@@ -134,9 +129,7 @@ def web(
     wsgi.logger.setLevel(logging.DEBUG)
     wsgi.logger.addHandler(fh)
 
-    run_app(
-        app=app, host=host, port=port, with_gunicorn=with_gunicorn, workers=workers, debug=debug
-    )
+    uvicorn.run(app, host=host, port=int(port), workers=workers)
 
 
 if __name__ == "__main__":
