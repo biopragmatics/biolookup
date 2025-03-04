@@ -192,7 +192,7 @@ def get_app_from_backend(backend: Backend) -> FastAPI:
     )
     fast_api.state.backend = backend
     fast_api.include_router(biolookup_blueprint)
-    fast_api.mount("/", WSGIMiddleware(app))
+    fast_api.mount("/", WSGIMiddleware(app))  # type:ignore
 
     # Make bioregistry available in all jinja templates
     app.jinja_env.globals.update(bioregistry=bioregistry)
