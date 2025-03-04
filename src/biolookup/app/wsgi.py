@@ -9,7 +9,7 @@ import bioregistry
 import pandas as pd
 from flasgger import Swagger
 from flask import Blueprint, Flask, abort, redirect, render_template, url_for
-from flask_bootstrap import Bootstrap
+from flask_bootstrap import Bootstrap4 as Bootstrap
 
 from .blueprints import biolookup_blueprint
 from .proxies import backend
@@ -20,7 +20,9 @@ logger = logging.getLogger(__name__)
 ui = Blueprint("ui", __name__)
 
 
-def _figure_number(n):
+def _figure_number(n: int | None) -> tuple[float, str] | tuple[None, None]:
+    if n is None:
+        return None, None
     if n > 1_000_000:
         lead = n / 1_000_000
         if lead < 10:
@@ -33,6 +35,7 @@ def _figure_number(n):
             return round(lead, 1), "K"
         else:
             return round(lead), "K"
+    return n, ""
 
 
 @ui.route("/")
