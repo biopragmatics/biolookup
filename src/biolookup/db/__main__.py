@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """CLI for the Biolookup Service database loader.
 
 Run with ``biolookup load``.

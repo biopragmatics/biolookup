@@ -1,19 +1,17 @@
-# -*- coding: utf-8 -*-
-
 """A resolution function for BLS backends."""
 
 import gzip
 import logging
-from collections import Counter, defaultdict
+from collections import defaultdict
+from collections.abc import Mapping
 from pathlib import Path
-from typing import DefaultDict, Dict, Mapping, Optional, Union
 
 import pandas as pd
 from sqlalchemy.engine import Engine
 from tqdm import tqdm
 
 from .backend import Backend
-from .memory_backend import MemoryBackend
+from .memory_backend import _prepare_backend_with_lookup
 from .sql_backend import RawSQLBackend
 
 __all__ = [
@@ -23,22 +21,22 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 
-def get_backend(
+def get_backend(  # noqa:C901
     *,
-    name_data: Union[None, str, pd.DataFrame] = None,
-    alts_data: Union[None, str, pd.DataFrame] = None,
-    defs_data: Union[None, str, pd.DataFrame] = None,
-    species_data: Union[None, str, pd.DataFrame] = None,
+    name_data: None | str | pd.DataFrame = None,
+    alts_data: None | str | pd.DataFrame = None,
+    defs_data: None | str | pd.DataFrame = None,
+    species_data: None | str | pd.DataFrame = None,
     lazy: bool = False,
     sql: bool = False,
-    uri: Union[None, str, Engine] = None,
-    refs_table: Optional[str] = None,
-    alts_table: Optional[str] = None,
-    defs_table: Optional[str] = None,
-    species_table: Optional[str] = None,
-    synonyms_table: Optional[str] = None,
-    xrefs_table: Optional[str] = None,
-    rels_table: Optional[str] = None,
+    uri: None | str | Engine = None,
+    refs_table: str | None = None,
+    alts_table: str | None = None,
+    defs_table: str | None = None,
+    species_table: str | None = None,
+    synonyms_table: str | None = None,
+    xrefs_table: str | None = None,
+    rels_table: str | None = None,
 ) -> Backend:
     """Get the backend based on the input data."""
     if sql:
@@ -121,9 +119,9 @@ def get_backend(
 
 
 def _get_lookup_from_df(
-    df: pd.DataFrame, desc: Optional[str] = None
+    df: pd.DataFrame, desc: str | None = None
 ) -> Mapping[str, Mapping[str, str]]:
-    lookup: DefaultDict[str, Dict[str, str]] = defaultdict(dict)
+    lookup: defaultdict[str, dict[str, str]] = defaultdict(dict)
     if desc is None:
         desc = "processing mappings from df"
     it = tqdm(df.values, total=len(df.index), desc=desc, unit_scale=True)
@@ -133,9 +131,9 @@ def _get_lookup_from_df(
 
 
 def _get_lookup_from_path(
-    path: Union[str, Path], desc: Optional[str] = None
+    path: str | Path, desc: str | None = None
 ) -> Mapping[str, Mapping[str, str]]:
-    lookup: DefaultDict[str, Dict[str, str]] = defaultdict(dict)
+    lookup: defaultdict[str, dict[str, str]] = defaultdict(dict)
     if desc is None:
         desc = "loading mappings"
     with gzip.open(path, "rt") as file:
@@ -144,40 +142,3 @@ def _get_lookup_from_path(
             prefix, identifier, name = line.strip().split("\t")
             lookup[prefix][identifier] = name
     return dict(lookup)
-
-
-def _prepare_backend_with_lookup(
-    name_lookup: Optional[Mapping[str, Mapping[str, str]]] = None,
-    alts_lookup: Optional[Mapping[str, Mapping[str, str]]] = None,
-    defs_lookup: Optional[Mapping[str, Mapping[str, str]]] = None,
-    species_lookup: Optional[Mapping[str, Mapping[str, str]]] = None,
-) -> Backend:
-    import pyobo
-
-    get_id_name_mapping, summarize_names = _h(name_lookup, pyobo.get_id_name_mapping)
-    get_id_species_mapping, summarize_species = _h(species_lookup, pyobo.get_id_species_mapping)
-    get_alts_to_id, summarize_alts = _h(alts_lookup, pyobo.get_alts_to_id)
-    get_id_definition_mapping, summarize_definitions = _h(
-        defs_lookup, pyobo.get_id_definition_mapping
-    )
-
-    return MemoryBackend(
-        get_id_name_mapping=get_id_name_mapping,
-        get_id_species_mapping=get_id_species_mapping,
-        get_alts_to_id=get_alts_to_id,
-        get_id_definition_mapping=get_id_definition_mapping,
-        summarize_names=summarize_names,
-        summarize_alts=summarize_alts,
-        summarize_definitions=summarize_definitions,
-        summarize_species=summarize_species,
-    )
-
-
-def _h(lookup, alt_lookup):
-    if lookup is None:  # lazy mode, will download/cache data as needed
-        return alt_lookup, Counter
-
-    def _summarize():
-        return Counter({k: len(v) for k, v in lookup.items()})
-
-    return lookup.get, _summarize

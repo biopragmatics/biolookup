@@ -1,19 +1,38 @@
-# -*- coding: utf-8 -*-
-
 """Base class for backends."""
 
 import logging
-from typing import Any, List, Mapping, Optional
+from collections.abc import Mapping
+from typing import Any, TypeAlias
 
 import bioregistry
 import pandas as pd
+from pydantic import BaseModel
 
 __all__ = [
     "Backend",
+    "LookupResult",
 ]
 
-
 logger = logging.getLogger(__name__)
+
+Prefix: TypeAlias = str
+Identifier: TypeAlias = str
+
+
+class LookupResult(BaseModel):
+    """A model for lookup responses."""
+
+    query: str
+    success: bool
+    message: str
+    prefix: str | None = None
+    identifier: str | None = None
+    name: str | None = None
+    providers: dict[str, str] | None = None
+    definition: str | None = None
+    species: str | None = None
+    synonyms: list[str] | None = None
+    xrefs: list[dict[str, str]] | None = None
 
 
 class Backend:
@@ -27,62 +46,62 @@ class Backend:
         """Get the canonical identifier in the given resource."""
         raise NotImplementedError
 
-    def get_name(self, prefix: str, identifier: str) -> Optional[str]:
+    def get_name(self, prefix: str, identifier: str) -> str | None:
         """Get the canonical/preferred (english) name for the identifier in the given resource."""
         raise NotImplementedError
 
-    def get_species(self, prefix: str, identifier: str) -> Optional[str]:
+    def get_species(self, prefix: str, identifier: str) -> str | None:
         """Get the species for the prefix/identifier if it is species-specific."""
         raise NotImplementedError
 
-    def get_definition(self, prefix: str, identifier: str) -> Optional[str]:
+    def get_definition(self, prefix: str, identifier: str) -> str | None:
         """Get the definition associated with the prefix/identifier."""
         raise NotImplementedError
 
-    def get_synonyms(self, prefix: str, identifier: str) -> List[str]:
+    def get_synonyms(self, prefix: str, identifier: str) -> list[str]:
         """Get a list of synonyms."""
         logger.warning(f"getting synonyms is not yet implemented for {self.__class__}")
         return []
 
-    def get_xrefs(self, prefix: str, identifier: str) -> List[Mapping[str, str]]:
+    def get_xrefs(self, prefix: str, identifier: str) -> list[Mapping[str, str]]:
         """Get a list of xrefs."""
         logger.warning(f"getting xrefs is not yet implemented for {self.__class__}")
         return []
 
-    def get_rels(self, prefix: str, identifier: str) -> List[Mapping[str, str]]:
+    def get_rels(self, prefix: str, identifier: str) -> list[Mapping[str, str]]:
         """Get a list of relations."""
         logger.warning(f"getting relations is not yet implemented for {self.__class__}")
         return []
 
-    def summarize_names(self) -> Mapping[str, Any]:
+    def summarize_names(self) -> Mapping[Prefix, Any]:
         """Summarize the names."""
         raise NotImplementedError
 
-    def summarize_alts(self) -> Mapping[str, Any]:
+    def summarize_alts(self) -> Mapping[Prefix, Any]:
         """Summarize the alternate identifiers."""
         raise NotImplementedError
 
-    def summarize_definitions(self) -> Mapping[str, Any]:
+    def summarize_definitions(self) -> Mapping[Prefix, Any]:
         """Summarize the definitions."""
         raise NotImplementedError
 
-    def summarize_species(self) -> Mapping[str, Any]:
+    def summarize_species(self) -> Mapping[Prefix, Any]:
         """Summarize the species."""
         raise NotImplementedError
 
-    def summarize_synonyms(self) -> Mapping[str, Any]:
+    def summarize_synonyms(self) -> Mapping[Prefix, Any]:
         """Summarize the synonyms."""
         raise NotImplementedError
 
-    def summarize_xrefs(self) -> Mapping[str, Any]:
+    def summarize_xrefs(self) -> Mapping[Prefix, Any]:
         """Summarize the xrefs."""
         raise NotImplementedError
 
-    def summarize_rels(self) -> Mapping[str, Any]:
+    def summarize_rels(self) -> Mapping[Prefix, Any]:
         """Summarize the relations."""
         raise NotImplementedError
 
-    def count_all(self):
+    def count_all(self) -> None:
         """Count all."""
         self.count_prefixes()
         self.count_definitions()
@@ -93,51 +112,52 @@ class Backend:
         self.count_xrefs()
         self.count_rels()
 
-    def count_names(self) -> Optional[int]:
+    def count_names(self) -> int | None:
         """Count the number of names in the database."""
 
-    def count_definitions(self) -> Optional[int]:
+    def count_definitions(self) -> int | None:
         """Count the number of definitions in the database."""
 
-    def count_alts(self) -> Optional[int]:
+    def count_alts(self) -> int | None:
         """Count the number of alternative identifiers in the database."""
 
-    def count_prefixes(self) -> Optional[int]:
+    def count_prefixes(self) -> int | None:
         """Count the number of prefixes in the database."""
 
-    def count_species(self) -> Optional[int]:
+    def count_species(self) -> int | None:
         """Count the number of species links in the database."""
 
-    def count_synonyms(self) -> Optional[int]:
+    def count_synonyms(self) -> int | None:
         """Count the number of synonyms in the database."""
 
-    def count_xrefs(self) -> Optional[int]:
+    def count_xrefs(self) -> int | None:
         """Count the number of xrefs in the database."""
 
-    def count_rels(self) -> Optional[int]:
+    def count_rels(self) -> int | None:
         """Count the number of relations in the database."""
 
-    def lookup(self, curie: str, *, resolve_alternate: bool = True) -> Mapping[str, Any]:
+    def lookup(self, curie: str, *, resolve_alternate: bool = True) -> LookupResult:  # noqa:C901
         """Return the results and summary when resolving a CURIE string."""
         prefix, identifier = bioregistry.parse_curie(curie)
         if prefix is None or identifier is None:
-            return dict(
-                query=curie,
-                success=False,
-                message="Could not identify prefix",
-            )
+            rv = {
+                "query": curie,
+                "success": False,
+                "message": "Could not identify prefix",
+            }
+            return LookupResult.model_validate(rv)
 
         providers = bioregistry.get_providers(prefix, identifier)
         if not self.has_prefix(prefix):
-            rv = dict(
-                query=curie,
-                prefix=prefix,
-                identifier=identifier,
-                providers=providers,
-                success=False,
-                message=f"Could not find id->name mapping for {prefix}",
-            )
-            return rv
+            rv = {
+                "query": curie,
+                "prefix": prefix,
+                "identifier": identifier,
+                "providers": providers,
+                "success": False,
+                "message": f"Could not find id->name mapping for {prefix}",
+            }
+            return LookupResult.model_validate(rv)
 
         name = self.get_name(prefix, identifier)
         if name is None and resolve_alternate:
@@ -147,22 +167,24 @@ class Backend:
                 name = self.get_name(prefix, identifier)
 
         if name is None:
-            return dict(
-                query=curie,
-                prefix=prefix,
-                identifier=identifier,
-                success=False,
-                providers=providers,
-                message="Could not look up identifier",
-            )
-        rv = dict(
-            query=curie,
-            prefix=prefix,
-            identifier=identifier,
-            name=name,
-            success=True,
-            providers=providers,
-        )
+            rv = {
+                "query": curie,
+                "prefix": prefix,
+                "identifier": identifier,
+                "success": False,
+                "providers": providers,
+                "message": "Could not look up identifier",
+            }
+            return LookupResult.model_validate(rv)
+        rv = {
+            "query": curie,
+            "prefix": prefix,
+            "identifier": identifier,
+            "name": name,
+            "success": True,
+            "providers": providers,
+            "message": f"Successfully looked up {curie}",
+        }
         definition = self.get_definition(prefix, identifier)
         if definition:
             rv["definition"] = definition
@@ -179,7 +201,7 @@ class Backend:
         if rels:
             rv["relations"] = rels
 
-        return rv
+        return LookupResult.model_validate(rv)
 
     def summary_df(self) -> pd.DataFrame:
         """Generate a summary dataframe."""
@@ -198,8 +220,8 @@ class Backend:
                     prefix,
                     bioregistry.get_name(prefix),
                     bioregistry.get_homepage(prefix),
-                    bioregistry.get_example(prefix),
-                    bioregistry.get_link(prefix, bioregistry.get_example(prefix)),
+                    example := bioregistry.get_example(prefix),
+                    bioregistry.get_iri(prefix, example) if example else None,
                     names_count,
                     summary_alts.get(prefix, 0),
                     summary_defs.get(prefix, 0),

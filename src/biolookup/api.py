@@ -1,14 +1,12 @@
-# -*- coding: utf-8 -*-
-
 """High-level API for the biolookup service."""
 
 import logging
 from functools import lru_cache
-from typing import Any, Mapping
+from typing import Any
 
 import pystow
 
-from .backends import Backend, RawSQLBackend, RemoteBackend
+from .backends import Backend, LookupResult, RawSQLBackend, RemoteBackend
 
 __all__ = [
     "lookup",
@@ -33,7 +31,7 @@ def _get_default_backend(remote_fallback: bool = True) -> Backend:
     )
 
 
-def lookup(curie: str, remote_fallback: bool = True, **kwargs) -> Mapping[str, Any]:
+def lookup(curie: str, remote_fallback: bool = True, **kwargs: Any) -> LookupResult:
     """Return the results and summary when resolving a CURIE string."""
     backend = _get_default_backend(remote_fallback=remote_fallback)
     return backend.lookup(curie=curie, **kwargs)

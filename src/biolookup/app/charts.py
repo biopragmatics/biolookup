@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """Generate charts for the summary section of the biolookup service."""
 
 import pathlib

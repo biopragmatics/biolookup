@@ -1,19 +1,19 @@
-# -*- coding: utf-8 -*-
-
 """Test for loading the database."""
 
 import gzip
 import tempfile
 import unittest
 from pathlib import Path
-from typing import ClassVar, Type
+from typing import ClassVar
 
 import pyobo
 import pystow
-from flask import Flask
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
 
 from biolookup.app.wsgi import get_app_from_backend
 from biolookup.backends import Backend, MemoryBackend, RawSQLBackend, get_backend
+from biolookup.backends.backend import LookupResult
 from biolookup.constants import DEFAULT_ENDPOINT
 from biolookup.db import loader
 
@@ -44,16 +44,15 @@ DEFS = [
     ("go", "0000076", "def_13"),
     ("hgnc", "10020", DEF_2),
     ("hgnc", "10021", "def_22"),
-    # ("hgnc", "id_23", "def_23"),
 ]
 SPECIES = [
     ("hgnc", "10020", "9606"),
     ("hgnc", "10021", "9606"),
     ("hgnc", "10023", "9606"),
 ]
-SYNONYMS = []
-XREFS = []
-RELS = []
+SYNONYMS: list[tuple[str, ...]] = []
+XREFS: list[tuple[str, ...]] = []
+RELS: list[tuple[str, ...]] = []
 
 
 def _write(path, data, *last):
@@ -66,10 +65,10 @@ def _write(path, data, *last):
 class BackendTestCase(unittest.TestCase):
     """A mixin for checking the backend."""
 
-    backend_cls: ClassVar[Type[Backend]]
+    backend_cls: ClassVar[type[Backend]]
     counts: ClassVar[bool]
 
-    def help_check(self, backend: Backend, counts: bool = True):
+    def help_check(self, backend: Backend, counts: bool = True) -> None:
         """Check backend."""
         self.assertTrue(issubclass(self.backend_cls, Backend))
         self.assertIsInstance(backend, self.backend_cls)
@@ -110,38 +109,39 @@ class BackendTestCase(unittest.TestCase):
         self.assert_go_example(r)
 
         r = backend.lookup("go:0030475")
-        self.assertEqual("go", r["prefix"])
-        self.assertEqual("0000073", r["identifier"])
-        self.assertEqual("initial mitotic spindle pole body separation", r["name"])
-        self.assertEqual(DEF_1, r["definition"])
-        self.assertEqual("go:0030475", r["query"])
+        self.assertEqual("go", r.prefix)
+        self.assertEqual("0000073", r.identifier)
+        self.assertEqual("initial mitotic spindle pole body separation", r.name)
+        self.assertEqual(DEF_1, r.definition)
+        self.assertEqual("go:0030475", r.query)
         self.assertNotIn("species", r)
 
         # Extra test to check species
         r = backend.lookup("hgnc:10020")
-        self.assertEqual("hgnc", r["prefix"])
-        self.assertEqual("10020", r["identifier"])
-        self.assertEqual("RIPK2", r["name"])
-        self.assertEqual(DEF_2, r["definition"])
-        self.assertEqual("9606", r["species"])
-        self.assertEqual("hgnc:10020", r["query"])
+        self.assertEqual("hgnc", r.prefix)
+        self.assertEqual("10020", r.identifier)
+        self.assertEqual("RIPK2", r.name)
+        self.assertEqual(DEF_2, r.definition)
+        self.assertEqual("9606", r.species)
+        self.assertEqual("hgnc:10020", r.query)
 
-    def assert_go_example(self, r):
+    def assert_go_example(self, r: LookupResult | None) -> None:
         """Run test of the canonical GO example."""
-        self.assertIsNotNone(r)
-        self.assertEqual("go", r["prefix"])
-        self.assertEqual("0000073", r["identifier"])
-        self.assertEqual("initial mitotic spindle pole body separation", r["name"])
-        self.assertEqual(DEF_1, r["definition"])
-        self.assertEqual("go:0000073", r["query"])
+        if r is None:
+            self.fail(msg="result should not be none")
+        self.assertEqual("go", r.prefix)
+        self.assertEqual("0000073", r.identifier)
+        self.assertEqual("initial mitotic spindle pole body separation", r.name)
+        self.assertEqual(DEF_1, r.definition)
+        self.assertEqual("go:0000073", r.query)
         self.assertNotIn("species", r)
 
-    def assert_app_lookup(self, app: Flask):
+    def assert_app_lookup(self, app: FastAPI) -> None:
         """Run the test on looking up the canonical GO example."""
-        with app.test_client() as client:
-            res = client.get(f"/{DEFAULT_ENDPOINT}/go:0000073")
-            self.assertIsNotNone(res)
-            self.assert_go_example(res.json)
+        client = TestClient(app)
+        res = client.get(f"/{DEFAULT_ENDPOINT}/go:0000073").json()
+        lookup_result = LookupResult.model_validate(res)
+        self.assert_go_example(lookup_result)
 
 
 @unittest.skipUnless(TEST_URI, reason="No biolookup/test_uri configuration found")
@@ -160,8 +160,8 @@ class TestRawSQLBackend(BackendTestCase):
         self.synonyms_table = "synonyms"
         self.xrefs_table = "xrefs"
         self.rels_table = "rels"
-        with tempfile.TemporaryDirectory() as directory:
-            directory = Path(directory)
+        with tempfile.TemporaryDirectory() as directory_:
+            directory = Path(directory_)
             refs_path = directory / "refs.tsv.gz"
             alts_path = directory / "alts.tsv.gz"
             defs_path = directory / "defs.tsv.gz"
@@ -212,11 +212,11 @@ class TestRawSQLBackend(BackendTestCase):
                 rels_table=self.rels_table,
             )
 
-    def test_backend(self):
+    def test_backend(self) -> None:
         """Test the raw SQL backend."""
         self.help_check(self.backend, counts=self.counts)
 
-    def test_app(self):
+    def test_app(self) -> None:
         """Test the app works properly."""
         app = get_app_from_backend(self.backend)
         self.assert_app_lookup(app)
@@ -234,11 +234,11 @@ class TestMemoryBackend(BackendTestCase):
         _ = pyobo.get_id_name_mapping("go", strict=False)
         self.backend = get_backend(lazy=True)
 
-    def test_backend(self):
+    def test_backend(self) -> None:
         """Test the in-memory backend."""
         self.help_check(self.backend, counts=self.counts)
 
-    def test_app(self):
+    def test_app(self) -> None:
         """Test the app works properly."""
         app = get_app_from_backend(self.backend)
         self.assert_app_lookup(app)

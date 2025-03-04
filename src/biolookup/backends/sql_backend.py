@@ -1,12 +1,11 @@
-# -*- coding: utf-8 -*-
-
 """An BLS backend that communicates with a SQL database."""
 
 import logging
 import time
 from collections import Counter
+from collections.abc import Iterable, Mapping
 from functools import lru_cache
-from typing import Any, Iterable, List, Mapping, Optional, Tuple, Union
+from typing import Any
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
@@ -32,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 
 def _ensure_engine(
-    engine: Union[None, str, Engine], engine_kwargs: Optional[Mapping[str, Any]] = None
+    engine: None | str | Engine, engine_kwargs: Mapping[str, Any] | None = None
 ) -> Engine:
     if engine is None:
         return create_engine(get_sqlalchemy_uri(), **(engine_kwargs or {}))
@@ -50,29 +49,35 @@ class RawSQLBackend(Backend):
 
     def __init__(
         self,
-        engine: Union[None, str, Engine] = None,
+        engine: None | str | Engine = None,
         *,
-        engine_kwargs: Optional[Mapping[str, Any]] = None,
-        refs_table: Optional[str] = None,
-        alts_table: Optional[str] = None,
-        defs_table: Optional[str] = None,
-        species_table: Optional[str] = None,
-        derived_table: Optional[str] = None,
-        synonyms_table: Optional[str] = None,
-        xrefs_table: Optional[str] = None,
-        rels_table: Optional[str] = None,
-    ):
+        engine_kwargs: Mapping[str, Any] | None = None,
+        refs_table: str | None = None,
+        alts_table: str | None = None,
+        defs_table: str | None = None,
+        species_table: str | None = None,
+        derived_table: str | None = None,
+        synonyms_table: str | None = None,
+        xrefs_table: str | None = None,
+        rels_table: str | None = None,
+    ) -> None:
         """Initialize the raw SQL backend.
 
         :param engine: An engine, connection string, or None if you want the default.
-        :param engine_kwargs: Kwargs for making the engine, if engine is given as a string or None
-        :param refs_table: A name for the references (prefix-id-name) table. Defaults to 'obo_reference'
-        :param alts_table: A name for the alts (prefix-id-alt) table. Defaults to 'obo_alt'
-        :param defs_table: A name for the defs (prefix-id-def) table. Defaults to 'obo_def'
-        :param species_table: A name for the defs (prefix-id-species) table. Defaults to 'obo_species'
+        :param engine_kwargs: Kwargs for making the engine, if engine is given as a
+            string or None
+        :param refs_table: A name for the references (prefix-id-name) table. Defaults to
+            'obo_reference'
+        :param alts_table: A name for the alts (prefix-id-alt) table. Defaults to
+            'obo_alt'
+        :param defs_table: A name for the defs (prefix-id-def) table. Defaults to
+            'obo_def'
+        :param species_table: A name for the defs (prefix-id-species) table. Defaults to
+            'obo_species'
         :param derived_table: A name for the prefix-id-... derived table.
         :param synonyms_table: A name for the prefix-id-synonym table.
-        :param xrefs_table: A name for the prefix-id-xprefix-xidentifier-provenance table.
+        :param xrefs_table: A name for the prefix-id-xprefix-xidentifier-provenance
+            table.
         :param rels_table: A name for the relation table.
         """
         self.engine = _ensure_engine(engine, engine_kwargs=engine_kwargs)
@@ -87,60 +92,57 @@ class RawSQLBackend(Backend):
         self.rels_table = rels_table or RELS_NAME
 
     def _count_summary(self, table):
-        return self._get_one(f"SELECT SUM(identifier_count) FROM {table}_summary;")  # noqa:S608
+        return self._get_one(f"SELECT SUM(identifier_count) FROM {table}_summary;")
 
-    @lru_cache(maxsize=1)
+    @lru_cache(maxsize=1)  # noqa:B019
     def count_names(self) -> int:
         """Get the number of names."""
         return self._count_summary(self.refs_table)
 
-    @lru_cache(maxsize=1)
+    @lru_cache(maxsize=1)  # noqa:B019
     def count_prefixes(self) -> int:
         """Count prefixes using a SQL query to the references summary table."""
         logger.info("counting prefixes")
         start = time.time()
-        rv = self._get_one(
-            f"SELECT COUNT(DISTINCT prefix) FROM {self.refs_table}_summary;"  # noqa:S608
-        )
+        rv = self._get_one(f"SELECT COUNT(DISTINCT prefix) FROM {self.refs_table}_summary;")
         logger.info("done counting prefixes after %.2fs", time.time() - start)
         return rv
 
-    @lru_cache(maxsize=1)
+    @lru_cache(maxsize=1)  # noqa:B019
     def count_definitions(self) -> int:
         """Count definitions using a SQL query to the definitions summary table."""
         return self._count_summary(self.defs_table)
 
-    @lru_cache(maxsize=1)
-    def count_species(self) -> Optional[int]:
+    @lru_cache(maxsize=1)  # noqa:B019
+    def count_species(self) -> int | None:
         """Count species using a SQL query to the species summary table."""
         logger.info("counting species")
         return self._count_summary(self.species_table)
 
-    @lru_cache(maxsize=1)
-    def count_synonyms(self) -> Optional[int]:
+    @lru_cache(maxsize=1)  # noqa:B019
+    def count_synonyms(self) -> int | None:
         """Count synonyms using a SQL query to the synonyms summary table."""
         return self._count_summary(self.synonyms_table)
 
-    @lru_cache(maxsize=1)
-    def count_xrefs(self) -> Optional[int]:
+    @lru_cache(maxsize=1)  # noqa:B019
+    def count_xrefs(self) -> int | None:
         """Count xrefs using a SQL query to the xrefs summary table."""
         return self._count_summary(self.xrefs_table)
 
-    @lru_cache(maxsize=1)
-    def count_rels(self) -> Optional[int]:
+    @lru_cache(maxsize=1)  # noqa:B019
+    def count_rels(self) -> int | None:
         """Count relations using a SQL query to the relations summary table."""
         return self._count_summary(self.rels_table)
 
-    @lru_cache(maxsize=1)
-    def count_alts(self) -> Optional[int]:
+    @lru_cache(maxsize=1)  # noqa:B019
+    def count_alts(self) -> int | None:
         """Count alts using a SQL query to the alts summary table."""
         logger.info("counting alts")
-        return self._get_one(f"SELECT COUNT(*) FROM {self.alts_table};")  # noqa:S608
+        return self._get_one(f"SELECT COUNT(*) FROM {self.alts_table};")
 
     def _get_one(self, sql: str):
-        with self.engine.connect() as connection:
-            result = connection.execute(sql).fetchone()
-            return result[0]
+        with self.engine.connect() as connection:  # type:ignore
+            return connection.execute(text(sql)).scalar()  # type:ignore
 
     def summarize_names(self) -> Counter:
         """Return the results of a SQL query that dumps the name summary table."""
@@ -170,23 +172,22 @@ class RawSQLBackend(Backend):
         """Return the results of a SQL query that dumps the relations summary table."""
         return self._get_summary(self.rels_table)
 
-    @lru_cache()
-    def _get_summary(self, table) -> Counter:
-        sql = f"SELECT prefix, identifier_count FROM {table}_summary;"  # noqa:S608
-        with self.engine.connect() as connection:
-            return Counter(dict(connection.execute(sql).fetchall()))
+    @lru_cache  # noqa:B019
+    def _get_summary(self, table: str) -> Counter:
+        sql = text(f"SELECT prefix, identifier_count FROM {table}_summary;")
+        with self.engine.connect() as connection:  # type:ignore
+            result = connection.execute(sql).fetchall()  # type:ignore
+        return Counter(dict(result))  # type:ignore
 
-    @lru_cache()
+    @lru_cache  # noqa:B019
     def has_prefix(self, prefix: str) -> bool:
         """Check for the prefix with a SQL query."""
-        sql = text(
-            f"SELECT EXISTS(SELECT 1 from {self.derived_table} WHERE prefix = :prefix);"  # noqa:S608
-        )
-        with self.engine.connect() as connection:
-            result = connection.execute(sql, prefix=prefix).fetchone()
-            return bool(result)
+        sql = text(f"SELECT EXISTS(SELECT 1 from {self.derived_table} WHERE prefix = :prefix);")
+        with self.engine.connect() as connection:  # type:ignore
+            result = connection.execute(sql, {"prefix": prefix}).fetchone()  # type:ignore
+        return bool(result)
 
-    @lru_cache(maxsize=100_000)
+    @lru_cache(maxsize=100_000)  # noqa:B019
     def get_primary_id(self, prefix: str, identifier: str) -> str:
         """Get the canonical identifier with a SQL query to the alts table."""
         sql = text(
@@ -194,46 +195,43 @@ class RawSQLBackend(Backend):
             SELECT identifier
             FROM {self.alts_table}
             WHERE prefix = :prefix and alt = :alt;
-        """  # noqa:S608
+        """
         )
-        with self.engine.connect() as connection:
-            result = connection.execute(sql, prefix=prefix, alt=identifier).fetchone()
-            return result[0] if result else identifier
+        with self.engine.connect() as connection:  # type:ignore
+            result = connection.execute(sql, {"prefix": prefix, "alt": identifier}).scalar()  # type:ignore
+        return result if result else identifier
 
-    def get_name(self, prefix: str, identifier: str) -> Optional[str]:
+    def get_name(self, prefix: str, identifier: str) -> str | None:
         """Get the name with a SQL query to the names table."""
         return self._help_one("name", prefix, identifier)
 
-    def get_species(self, prefix: str, identifier: str) -> Optional[str]:
+    def get_species(self, prefix: str, identifier: str) -> str | None:
         """Get the species with a SQL query to the species table."""
         return self._help_one("species", prefix, identifier)
 
-    def get_definition(self, prefix: str, identifier: str) -> Optional[str]:
+    def get_definition(self, prefix: str, identifier: str) -> str | None:
         """Get the definition with a SQL query to the definitions table."""
         return self._help_one("definition", prefix, identifier)
 
-    @lru_cache(maxsize=100_000)
-    def _help_one(self, column: str, prefix: str, identifier: str) -> Optional[str]:
+    @lru_cache(maxsize=100_000)  # noqa:B019
+    def _help_one(self, column: str, prefix: str, identifier: str) -> str | None:
         sql = text(
             f"""
             SELECT {column}
             FROM {self.derived_table}
             WHERE prefix = :prefix and identifier = :identifier;
         """
-        )  # noqa:S608
-        with self.engine.connect() as connection:
-            result = connection.execute(sql, prefix=prefix, identifier=identifier).fetchone()
-            if result:
-                return result[0]
-        return None
+        )
+        with self.engine.connect() as connection:  # type:ignore
+            return connection.execute(sql, {"prefix": prefix, "identifier": identifier}).scalar()  # type:ignore
 
-    def get_synonyms(self, prefix: str, identifier: str) -> List[str]:
+    def get_synonyms(self, prefix: str, identifier: str) -> list[str]:
         """Get synonyms with a SQL query to the synonyms table."""
         return self._help_many(
             "synonym", table=self.synonyms_table, prefix=prefix, identifier=identifier
         )
 
-    def get_xrefs(self, prefix: str, identifier: str) -> List[Mapping[str, str]]:
+    def get_xrefs(self, prefix: str, identifier: str) -> list[Mapping[str, str]]:
         """Get xrefs with a SQL query to the xrefs table."""
         return self._help_many_dict(
             "xref_prefix",
@@ -244,7 +242,7 @@ class RawSQLBackend(Backend):
             identifier=identifier,
         )
 
-    def get_rels(self, prefix: str, identifier: str) -> List[Mapping[str, str]]:
+    def get_rels(self, prefix: str, identifier: str) -> list[Mapping[str, str]]:
         """Get relations with a SQL query to the relations table."""
         return self._help_many_dict(
             "relation_prefix",
@@ -256,28 +254,30 @@ class RawSQLBackend(Backend):
             identifier=identifier,
         )
 
-    def _help_many(self, column: str, *, table: str, prefix: str, identifier: str) -> List[str]:
+    def _help_many(self, column: str, *, table: str, prefix: str, identifier: str) -> list[str]:
         results = self._fetchmany(column, table=table, prefix=prefix, identifier=identifier)
-        return [result for result, in results]
+        return [result for (result,) in results]
 
     def _help_many_dict(
         self, *columns: str, table: str, prefix: str, identifier: str
-    ) -> List[Mapping[str, str]]:
+    ) -> list[Mapping[str, str]]:
         results = self._fetchmany(
             ", ".join(columns), table=table, prefix=prefix, identifier=identifier
         )
-        return [dict(zip(columns, result)) for result in results]
+        return [dict(zip(columns, result, strict=False)) for result in results]
 
     def _fetchmany(
         self, columns: str, table: str, prefix: str, identifier: str
-    ) -> Iterable[Tuple[str]]:
+    ) -> Iterable[tuple[str]]:
         sql = text(
-            f"""
+            rf"""
             SELECT {columns}
             FROM {table}
             WHERE prefix = :prefix and identifier = :identifier;
         """
-        )  # noqa:S608
-        with self.engine.connect() as connection:
-            results = connection.execute(sql, prefix=prefix, identifier=identifier).fetchall()
-        return results
+        )
+        with self.engine.connect() as connection:  # type:ignore
+            results = connection.execute(
+                sql, {"prefix": prefix, "identifier": identifier}
+            ).fetchall()  # type:ignore
+        return results  # type:ignore

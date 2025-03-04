@@ -1,18 +1,18 @@
-# -*- coding: utf-8 -*-
-
 """Biolookup Service.
 
 Run with ``python -m biolookup.app``
 """
 
 import logging
-from typing import Optional, Union
+import os
 
 import bioregistry
+import flask
 import pandas as pd
-from flasgger import Swagger
+from a2wsgi import WSGIMiddleware
+from fastapi import FastAPI
 from flask import Blueprint, Flask, abort, redirect, render_template, url_for
-from flask_bootstrap import Bootstrap
+from flask_bootstrap import Bootstrap4 as Bootstrap
 
 from .blueprints import biolookup_blueprint
 from .proxies import backend
@@ -23,7 +23,9 @@ logger = logging.getLogger(__name__)
 ui = Blueprint("ui", __name__)
 
 
-def _figure_number(n):
+def _figure_number(n: int | None) -> tuple[float, str] | tuple[None, None]:
+    if n is None:
+        return None, None
     if n > 1_000_000:
         lead = n / 1_000_000
         if lead < 10:
@@ -36,6 +38,7 @@ def _figure_number(n):
             return round(lead, 1), "K"
         else:
             return round(lead), "K"
+    return n, ""
 
 
 @ui.route("/")
@@ -71,10 +74,12 @@ def home():
 @ui.route("/statistics")
 def summary():
     """Serve the summary page."""
-    return render_template(
-        "statistics.html",
-        summary_df=backend.summary_df(),
-    )
+    try:
+        summary_df = backend.summary_df()
+    except NotImplementedError:
+        flask.flash("summary generation is not enabled", category="warning")
+        return redirect(url_for("ui." + home.__name__))
+    return render_template("statistics.html", summary_df=summary_df)
 
 
 @ui.route("/about")
@@ -112,32 +117,32 @@ def entity(curie: str):
 
 
 def get_app(
-    name_data: Union[None, str, pd.DataFrame] = None,
-    alts_data: Union[None, str, pd.DataFrame] = None,
-    defs_data: Union[None, str, pd.DataFrame] = None,
-    species_data: Union[None, str, pd.DataFrame] = None,
+    name_data: None | str | pd.DataFrame = None,
+    alts_data: None | str | pd.DataFrame = None,
+    defs_data: None | str | pd.DataFrame = None,
+    species_data: None | str | pd.DataFrame = None,
     lazy: bool = False,
     sql: bool = False,
-    uri: Optional[str] = None,
-    refs_table: Optional[str] = None,
-    alts_table: Optional[str] = None,
-    defs_table: Optional[str] = None,
-    species_table: Optional[str] = None,
-) -> Flask:
+    uri: str | None = None,
+    refs_table: str | None = None,
+    alts_table: str | None = None,
+    defs_table: str | None = None,
+    species_table: str | None = None,
+) -> FastAPI:
     """Build a flask app.
 
-    :param name_data: If none, uses the internal PyOBO loader. If a string, assumes is a gzip and reads a
-         dataframe from there. If a dataframe, uses it directly. Assumes data frame has 3 columns - prefix,
-         identifier, and name and is a TSV.
-    :param alts_data: If none, uses the internal PyOBO loader. If a string, assumes is a gzip and reads a
-         dataframe from there. If a dataframe, uses it directly. Assumes data frame has 3 columns - prefix,
-         identifier, and alt identifier and is a TSV.
-    :param defs_data: If none, uses the internal PyOBO loader. If a string, assumes is a gzip and reads a
-         dataframe from there. If a dataframe, uses it directly. Assumes data frame has 3 columns - prefix,
-         identifier, and definition and is a TSV.
-    :param species_data: If none, uses the internal PyOBO loader. If a string, assumes is a gzip and reads a
-         dataframe from there. If a dataframe, uses it directly. Assumes data frame has 3 columns - prefix,
-         identifier, and species and is a TSV.
+    :param name_data: If none, uses the internal PyOBO loader. If a string, assumes is a
+        gzip and reads a dataframe from there. If a dataframe, uses it directly. Assumes
+        data frame has 3 columns - prefix, identifier, and name and is a TSV.
+    :param alts_data: If none, uses the internal PyOBO loader. If a string, assumes is a
+        gzip and reads a dataframe from there. If a dataframe, uses it directly. Assumes
+        data frame has 3 columns - prefix, identifier, and alt identifier and is a TSV.
+    :param defs_data: If none, uses the internal PyOBO loader. If a string, assumes is a
+        gzip and reads a dataframe from there. If a dataframe, uses it directly. Assumes
+        data frame has 3 columns - prefix, identifier, and definition and is a TSV.
+    :param species_data: If none, uses the internal PyOBO loader. If a string, assumes
+        is a gzip and reads a dataframe from there. If a dataframe, uses it directly.
+        Assumes data frame has 3 columns - prefix, identifier, and species and is a TSV.
     :param lazy: don't load the full cache into memory to run
     :param sql: use a remote SQL database
     :param uri: If using a remote SQL database, specify a non-default connection string
@@ -145,7 +150,8 @@ def get_app(
     :param alts_table: Name of the alternative identifiers table in the SQL database
     :param defs_table: Name of the definitions table in the SQL database
     :param species_table: Name of the species table in the SQL database
-    :return: A pre-built flask app.
+
+    :returns: A pre-built flask app.
     """
     backend = get_backend(
         name_data=name_data,
@@ -163,41 +169,34 @@ def get_app(
     return get_app_from_backend(backend)
 
 
-def get_app_from_backend(backend: Backend) -> Flask:
+def get_app_from_backend(backend: Backend) -> FastAPI:
     """Build a flask app."""
     app = Flask(__name__)
-    Swagger(
-        app,
-        merge=True,
-        config={
-            "host": "biolookup.io",
-            "info": {
-                "title": "Biolookup Service API",
-                "description": "Retrieves metadata and ontological information about "
-                "biomedical entities based on their CURIEs.",
-                "contact": {
-                    "responsibleDeveloper": "Charles Tapley Hoyt",
-                    "email": "cthoyt@gmail.com",
-                },
-                "license": {
-                    "name": "Code available under the MIT License",
-                    "url": "https://github.com/biopragmatics/biolookup/blob/main/LICENSE",
-                },
-            },
-        },
-    )
     Bootstrap(app)
-
     app.config["resolver_backend"] = backend
     app.register_blueprint(ui)
-    app.register_blueprint(biolookup_blueprint, url_prefix="/api")
+    app.secret_key = os.urandom(8)
+
+    fast_api = FastAPI(
+        title="Biolookup Service API",
+        description="Retrieves metadata and ontological information "
+        "about biomedical entities based on their CURIEs.",
+        contact={
+            "name": "Charles Tapley Hoyt",
+            "email": "cthoyt@gmail.com",
+        },
+        license_info={
+            "name": "Code available under the MIT License",
+            "url": "https://github.com/biopragmatics/biolookup/blob/main/LICENSE",
+        },
+    )
+    fast_api.state.backend = backend
+    fast_api.include_router(biolookup_blueprint)
+    fast_api.mount("/", WSGIMiddleware(app))  # type:ignore
 
     # Make bioregistry available in all jinja templates
     app.jinja_env.globals.update(bioregistry=bioregistry)
 
-    @app.before_first_request
-    def _before_first_request():
-        logger.info("before_first_request")
-        backend.count_all()
+    backend.count_all()
 
-    return app
+    return fast_api
