@@ -1,11 +1,8 @@
 """A remote backend for the Biolookup Service."""
 
-from collections.abc import Mapping
-from typing import Any
-
 import requests
 
-from .backend import Backend
+from .backend import Backend, LookupResult
 from ..constants import DEFAULT_ENDPOINT, DEFAULT_URL
 
 __all__ = [
@@ -26,11 +23,11 @@ class RemoteBackend(Backend):
         self.base_url = (base_url or DEFAULT_URL).rstrip("/")
         self.endpoint = (endpoint or DEFAULT_ENDPOINT).strip("/")
 
-    def lookup(self, curie: str, *, resolve_alternate: bool = True) -> Mapping[str, Any]:
+    def lookup(self, curie: str, *, resolve_alternate: bool = True) -> LookupResult:
         """Lookup the CURIE using the remote service."""
         res = requests.get(f"{self.base_url}/{self.endpoint}/{curie}", timeout=5)
         res.raise_for_status()
-        return res.json()
+        return LookupResult.model_validate(res.json())
 
 
 def _main():

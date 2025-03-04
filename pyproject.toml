@@ -59,11 +59,12 @@ dependencies = [
     "pyobo>=0.6.3",
     "flask",
     "bootstrap-flask",
-    "flasgger",
     "psutil",
     "sqlalchemy",
     "psycopg2-binary",
-    "tabulate"
+    "tabulate",
+    "pydantic",
+    "fastapi",
 ]
 
 [project.optional-dependencies]

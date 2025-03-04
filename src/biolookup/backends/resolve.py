@@ -4,6 +4,7 @@ import gzip
 import logging
 from collections import Counter, defaultdict
 from collections.abc import Mapping
+from functools import partial
 from pathlib import Path
 
 import pandas as pd
@@ -152,11 +153,15 @@ def _prepare_backend_with_lookup(
 ) -> Backend:
     import pyobo
 
-    get_id_name_mapping, summarize_names = _h(name_lookup, pyobo.get_id_name_mapping)
-    get_id_species_mapping, summarize_species = _h(species_lookup, pyobo.get_id_species_mapping)
-    get_alts_to_id, summarize_alts = _h(alts_lookup, pyobo.get_alts_to_id)
+    get_id_name_mapping, summarize_names = _h(
+        name_lookup, partial(pyobo.get_id_name_mapping, strict=False)
+    )
+    get_id_species_mapping, summarize_species = _h(
+        species_lookup, partial(pyobo.get_id_species_mapping, strict=False)
+    )
+    get_alts_to_id, summarize_alts = _h(alts_lookup, partial(pyobo.get_alts_to_id, strict=False))
     get_id_definition_mapping, summarize_definitions = _h(
-        defs_lookup, pyobo.get_id_definition_mapping
+        defs_lookup, partial(pyobo.get_id_definition_mapping, strict=False)
     )
 
     return MemoryBackend(

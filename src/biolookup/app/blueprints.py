@@ -4,9 +4,9 @@ import logging
 import os
 import time
 
-from flask import Blueprint, jsonify
+from fastapi import APIRouter, Request
 
-from .proxies import backend
+from ..backends.backend import LookupResult
 from ..constants import DEFAULT_URL
 
 __all__ = [
@@ -14,11 +14,11 @@ __all__ = [
 ]
 
 logger = logging.getLogger(__name__)
-biolookup_blueprint = Blueprint("biolookup", __name__)
+biolookup_blueprint = APIRouter(prefix="/api")
 
 
-@biolookup_blueprint.route("/lookup/<curie>")
-def lookup(curie: str):
+@biolookup_blueprint.get("/lookup/{curie}", response_model=LookupResult)
+def lookup(curie: str, request: Request):
     """Lookup a CURIE.
 
     The goal of this endpoint is to lookup metadata and ontological information
@@ -39,18 +39,23 @@ def lookup(curie: str):
         type: string
         example: doid:14330
     """
+    backend = request.app.state.backend
     logger.debug("querying %s", curie)
     start = time.time()
     rv = backend.lookup(curie)
     logger.debug("queried %s in %.2f seconds", curie, time.time() - start)
-    rv["providers"]["biolookup"] = f"{DEFAULT_URL}/{curie}"
-    return jsonify(rv)
+    if rv.providers is None:
+        rv.providers = {"biolookup": f"{DEFAULT_URL}/{curie}"}
+    else:
+        rv.providers["biolookup"] = f"{DEFAULT_URL}/{curie}"
+    return rv
 
 
 @biolookup_blueprint.route("/summary.json")
-def summary_json():
+def summary_json(request: Request):
     """Summary of the content in the service."""
-    return jsonify(backend.summarize_names())
+    backend = request.app.state.backend
+    return backend.summarize_names()
 
 
 @biolookup_blueprint.route("/size")
@@ -62,12 +67,12 @@ def size():
     try:
         import psutil
     except ImportError:
-        return jsonify({})
+        return {}
     from humanize.filesize import naturalsize
 
     process = psutil.Process(os.getpid())
     n_bytes = process.memory_info().rss  # in bytes
-    return jsonify(
-        n_bytes=n_bytes,
-        n_bytes_human=naturalsize(n_bytes),
-    )
+    return {
+        "n_bytes": n_bytes,
+        "n_bytes_human": naturalsize(n_bytes),
+    }

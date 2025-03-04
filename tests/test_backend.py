@@ -3,16 +3,17 @@
 import gzip
 import tempfile
 import unittest
-from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, ClassVar
+from typing import ClassVar
 
 import pyobo
 import pystow
-from flask import Flask
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
 
 from biolookup.app.wsgi import get_app_from_backend
 from biolookup.backends import Backend, MemoryBackend, RawSQLBackend, get_backend
+from biolookup.backends.backend import LookupResult
 from biolookup.constants import DEFAULT_ENDPOINT
 from biolookup.db import loader
 
@@ -108,39 +109,39 @@ class BackendTestCase(unittest.TestCase):
         self.assert_go_example(r)
 
         r = backend.lookup("go:0030475")
-        self.assertEqual("go", r["prefix"])
-        self.assertEqual("0000073", r["identifier"])
-        self.assertEqual("initial mitotic spindle pole body separation", r["name"])
-        self.assertEqual(DEF_1, r["definition"])
-        self.assertEqual("go:0030475", r["query"])
+        self.assertEqual("go", r.prefix)
+        self.assertEqual("0000073", r.identifier)
+        self.assertEqual("initial mitotic spindle pole body separation", r.name)
+        self.assertEqual(DEF_1, r.definition)
+        self.assertEqual("go:0030475", r.query)
         self.assertNotIn("species", r)
 
         # Extra test to check species
         r = backend.lookup("hgnc:10020")
-        self.assertEqual("hgnc", r["prefix"])
-        self.assertEqual("10020", r["identifier"])
-        self.assertEqual("RIPK2", r["name"])
-        self.assertEqual(DEF_2, r["definition"])
-        self.assertEqual("9606", r["species"])
-        self.assertEqual("hgnc:10020", r["query"])
+        self.assertEqual("hgnc", r.prefix)
+        self.assertEqual("10020", r.identifier)
+        self.assertEqual("RIPK2", r.name)
+        self.assertEqual(DEF_2, r.definition)
+        self.assertEqual("9606", r.species)
+        self.assertEqual("hgnc:10020", r.query)
 
-    def assert_go_example(self, r: Mapping[str, Any] | None) -> None:
+    def assert_go_example(self, r: LookupResult | None) -> None:
         """Run test of the canonical GO example."""
         if r is None:
             self.fail(msg="result should not be none")
-        self.assertEqual("go", r["prefix"])
-        self.assertEqual("0000073", r["identifier"])
-        self.assertEqual("initial mitotic spindle pole body separation", r["name"])
-        self.assertEqual(DEF_1, r["definition"])
-        self.assertEqual("go:0000073", r["query"])
+        self.assertEqual("go", r.prefix)
+        self.assertEqual("0000073", r.identifier)
+        self.assertEqual("initial mitotic spindle pole body separation", r.name)
+        self.assertEqual(DEF_1, r.definition)
+        self.assertEqual("go:0000073", r.query)
         self.assertNotIn("species", r)
 
-    def assert_app_lookup(self, app: Flask) -> None:
+    def assert_app_lookup(self, app: FastAPI) -> None:
         """Run the test on looking up the canonical GO example."""
-        with app.test_client() as client:
-            res = client.get(f"/{DEFAULT_ENDPOINT}/go:0000073")
-            self.assertIsNotNone(res)
-            self.assert_go_example(res.json)
+        client = TestClient(app)
+        res = client.get(f"/{DEFAULT_ENDPOINT}/go:0000073").json()
+        lookup_result = LookupResult.model_validate(res)
+        self.assert_go_example(lookup_result)
 
 
 @unittest.skipUnless(TEST_URI, reason="No biolookup/test_uri configuration found")

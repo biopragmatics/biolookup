@@ -7,7 +7,8 @@ import logging
 
 import bioregistry
 import pandas as pd
-from flasgger import Swagger
+from a2wsgi import WSGIMiddleware
+from fastapi import FastAPI
 from flask import Blueprint, Flask, abort, redirect, render_template, url_for
 from flask_bootstrap import Bootstrap4 as Bootstrap
 
@@ -123,7 +124,7 @@ def get_app(
     alts_table: str | None = None,
     defs_table: str | None = None,
     species_table: str | None = None,
-) -> Flask:
+) -> FastAPI:
     """Build a flask app.
 
     :param name_data: If none, uses the internal PyOBO loader. If a string, assumes is a
@@ -164,38 +165,33 @@ def get_app(
     return get_app_from_backend(backend)
 
 
-def get_app_from_backend(backend: Backend) -> Flask:
+def get_app_from_backend(backend: Backend) -> FastAPI:
     """Build a flask app."""
     app = Flask(__name__)
-    Swagger(
-        app,
-        merge=True,
-        config={
-            "host": "biolookup.io",
-            "info": {
-                "title": "Biolookup Service API",
-                "description": "Retrieves metadata and ontological information about "
-                "biomedical entities based on their CURIEs.",
-                "contact": {
-                    "responsibleDeveloper": "Charles Tapley Hoyt",
-                    "email": "cthoyt@gmail.com",
-                },
-                "license": {
-                    "name": "Code available under the MIT License",
-                    "url": "https://github.com/biopragmatics/biolookup/blob/main/LICENSE",
-                },
-            },
-        },
-    )
     Bootstrap(app)
-
     app.config["resolver_backend"] = backend
     app.register_blueprint(ui)
-    app.register_blueprint(biolookup_blueprint, url_prefix="/api")
+
+    fast_api = FastAPI(
+        title="Biolookup Service API",
+        description="Retrieves metadata and ontological information "
+        "about biomedical entities based on their CURIEs.",
+        contact={
+            "name": "Charles Tapley Hoyt",
+            "email": "cthoyt@gmail.com",
+        },
+        license_info={
+            "name": "Code available under the MIT License",
+            "url": "https://github.com/biopragmatics/biolookup/blob/main/LICENSE",
+        },
+    )
+    fast_api.state.backend = backend
+    fast_api.include_router(biolookup_blueprint)
+    fast_api.mount("/", WSGIMiddleware(app))
 
     # Make bioregistry available in all jinja templates
     app.jinja_env.globals.update(bioregistry=bioregistry)
 
     backend.count_all()
 
-    return app
+    return fast_api

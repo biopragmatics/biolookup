@@ -6,13 +6,30 @@ from typing import Any
 
 import bioregistry
 import pandas as pd
+from pydantic import BaseModel
 
 __all__ = [
     "Backend",
+    "LookupResult",
 ]
 
-
 logger = logging.getLogger(__name__)
+
+
+class LookupResult(BaseModel):
+    """A model for lookup responses."""
+
+    query: str
+    success: bool
+    message: str
+    prefix: str | None = None
+    identifier: str | None = None
+    name: str | None = None
+    providers: dict[str, str] | None = None
+    definition: str | None = None
+    species: str | None = None
+    synonyms: list[str] | None = None
+    xrefs: list[dict[str, str]] | None = None
 
 
 class Backend:
@@ -116,15 +133,16 @@ class Backend:
     def count_rels(self) -> int | None:
         """Count the number of relations in the database."""
 
-    def lookup(self, curie: str, *, resolve_alternate: bool = True) -> Mapping[str, Any]:  # noqa:C901
+    def lookup(self, curie: str, *, resolve_alternate: bool = True) -> LookupResult:  # noqa:C901
         """Return the results and summary when resolving a CURIE string."""
         prefix, identifier = bioregistry.parse_curie(curie)
         if prefix is None or identifier is None:
-            return {
+            rv = {
                 "query": curie,
                 "success": False,
                 "message": "Could not identify prefix",
             }
+            return LookupResult.model_validate(rv)
 
         providers = bioregistry.get_providers(prefix, identifier)
         if not self.has_prefix(prefix):
@@ -136,7 +154,7 @@ class Backend:
                 "success": False,
                 "message": f"Could not find id->name mapping for {prefix}",
             }
-            return rv
+            return LookupResult.model_validate(rv)
 
         name = self.get_name(prefix, identifier)
         if name is None and resolve_alternate:
@@ -146,7 +164,7 @@ class Backend:
                 name = self.get_name(prefix, identifier)
 
         if name is None:
-            return {
+            rv = {
                 "query": curie,
                 "prefix": prefix,
                 "identifier": identifier,
@@ -154,6 +172,7 @@ class Backend:
                 "providers": providers,
                 "message": "Could not look up identifier",
             }
+            return LookupResult.model_validate(rv)
         rv = {
             "query": curie,
             "prefix": prefix,
@@ -161,6 +180,7 @@ class Backend:
             "name": name,
             "success": True,
             "providers": providers,
+            "message": f"Successfully looked up {curie}",
         }
         definition = self.get_definition(prefix, identifier)
         if definition:
@@ -178,7 +198,7 @@ class Backend:
         if rels:
             rv["relations"] = rels
 
-        return rv
+        return LookupResult.model_validate(rv)
 
     def summary_df(self) -> pd.DataFrame:
         """Generate a summary dataframe."""
