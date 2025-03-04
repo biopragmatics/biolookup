@@ -1,10 +1,9 @@
-# -*- coding: utf-8 -*-
-
 """High-level API for the biolookup service."""
 
 import logging
+from collections.abc import Mapping
 from functools import lru_cache
-from typing import Any, Mapping
+from typing import Any
 
 import pystow
 

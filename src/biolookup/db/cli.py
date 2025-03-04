@@ -1,11 +1,7 @@
-# -*- coding: utf-8 -*-
-
 """CLI for the Biolookup Service database loader.
 
 Run with ``biolookup load``.
 """
-
-from typing import Optional
 
 import click
 from more_click import verbose_option
@@ -80,7 +76,7 @@ def load(
     xrefs_table: str,
     xrefs_path: str,
     test: bool,
-    date: Optional[str],
+    date: str | None,
 ):
     """Load the SQL database."""
     from .loader import load as _load

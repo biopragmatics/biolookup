@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """Command line interface for :mod:`biolookup`."""
 
 import json
@@ -26,7 +24,7 @@ def main():
 @click.argument("curie")
 def lookup(curie: str):
     """Look up a CURIE."""
-    print(json.dumps(api.lookup(curie), indent=2, sort_keys=True))
+    click.echo(json.dumps(api.lookup(curie), indent=2, sort_keys=True))
 
 
 main.add_command(web)

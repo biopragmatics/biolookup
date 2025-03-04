@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """Biolookup Service CLI.
 
 Run with ``biolookup web``.
@@ -7,7 +5,6 @@ Run with ``biolookup web``.
 
 import logging
 import sys
-from typing import Optional
 
 import click
 from more_click import (
@@ -29,8 +26,8 @@ LOG_PATH = MODULE.join(name="log.txt")
 
 
 @click.command()
-@port_option
-@host_option
+@port_option  # type:ignore[misc]
+@host_option  # type:ignore[misc]
 @click.option("--name-data", help="local 3-column gzipped TSV as database")
 @click.option("--alts-data", help="local 3-column gzipped TSV as database")
 @click.option("--defs-data", help="local 3-column gzipped TSV as database")
@@ -46,26 +43,26 @@ LOG_PATH = MODULE.join(name="log.txt")
 @click.option("--lazy", is_flag=True, help="do no load full cache into memory automatically")
 @click.option("--test", is_flag=True, help="run in test mode with only a few datasets")
 @click.option("--workers", type=int, help="number of workers to use in --gunicorn mode")
-@with_gunicorn_option
-@verbose_option
-@debug_option
+@with_gunicorn_option  # type:ignore[misc]
+@verbose_option  # type:ignore[misc]
+@debug_option  # type:ignore[misc]
 def web(
     port: str,
     host: str,
     sql: bool,
-    uri: Optional[str],
-    sql_refs_table: Optional[str],
-    sql_alts_table: Optional[str],
-    sql_defs_table: Optional[str],
-    name_data: Optional[str],
-    alts_data: Optional[str],
-    defs_data: Optional[str],
+    uri: str | None,
+    sql_refs_table: str | None,
+    sql_alts_table: str | None,
+    sql_defs_table: str | None,
+    name_data: str | None,
+    alts_data: str | None,
+    defs_data: str | None,
     test: bool,
     with_gunicorn: bool,
     lazy: bool,
     workers: int,
     debug: bool,
-):
+) -> None:
     """Run the Biolookup Service."""
     if test:
         if lazy:

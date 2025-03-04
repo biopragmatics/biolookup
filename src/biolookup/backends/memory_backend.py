@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
-
 """An in-memory backend for the Biolookup Service based on PyOBO functions."""
 
-from typing import Any, Callable, List, Mapping, Optional
+from collections.abc import Callable, Mapping
+from typing import Any
 
 import pyobo
 
@@ -23,10 +22,10 @@ class MemoryBackend(Backend):
         get_id_species_mapping,
         get_alts_to_id,
         get_id_synonyms_mapping=None,
-        summarize_names: Optional[Callable[[], Mapping[str, Any]]],
-        summarize_alts: Optional[Callable[[], Mapping[str, Any]]] = None,
-        summarize_definitions: Optional[Callable[[], Mapping[str, Any]]] = None,
-        summarize_species: Optional[Callable[[], Mapping[str, Any]]] = None,
+        summarize_names: Callable[[], Mapping[str, Any]] | None,
+        summarize_alts: Callable[[], Mapping[str, Any]] | None = None,
+        summarize_definitions: Callable[[], Mapping[str, Any]] | None = None,
+        summarize_species: Callable[[], Mapping[str, Any]] | None = None,
         get_id_definition_mapping=None,
     ) -> None:
         """Initialize the in-memory backend.
@@ -60,24 +59,24 @@ class MemoryBackend(Backend):
         alts_to_id = self.get_alts_to_id(prefix) or {}
         return alts_to_id.get(identifier, identifier)
 
-    def get_name(self, prefix: str, identifier: str) -> Optional[str]:
+    def get_name(self, prefix: str, identifier: str) -> str | None:
         """Get the name with the id/name getter."""
         id_name_mapping = self.get_id_name_mapping(prefix) or {}
         return id_name_mapping.get(identifier)
 
-    def get_species(self, prefix: str, identifier: str) -> Optional[str]:
+    def get_species(self, prefix: str, identifier: str) -> str | None:
         """Get the species with the id/species getter."""
         id_species_mapping = self.get_id_species_mapping(prefix) or {}
         return id_species_mapping.get(identifier)
 
-    def get_definition(self, prefix: str, identifier: str) -> Optional[str]:
+    def get_definition(self, prefix: str, identifier: str) -> str | None:
         """Get the name with the id/definition getter, if available."""
         if self.get_id_definition_mapping is None:
             return None
         id_definition_mapping = self.get_id_definition_mapping(prefix) or {}
         return id_definition_mapping.get(identifier)
 
-    def get_synonyms(self, prefix: str, identifier: str) -> List[str]:
+    def get_synonyms(self, prefix: str, identifier: str) -> list[str]:
         """Get the synonyms with the id/synonym getter, if available."""
         x = self.get_id_synonyms_mapping(prefix) or {}
         return x.get(identifier, [])

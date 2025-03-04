@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """Constants for the biolookup service."""
 
 import pystow

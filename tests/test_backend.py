@@ -1,12 +1,11 @@
-# -*- coding: utf-8 -*-
-
 """Test for loading the database."""
 
 import gzip
 import tempfile
 import unittest
+from collections.abc import Mapping
 from pathlib import Path
-from typing import ClassVar, Type
+from typing import Any, ClassVar
 
 import pyobo
 import pystow
@@ -44,16 +43,15 @@ DEFS = [
     ("go", "0000076", "def_13"),
     ("hgnc", "10020", DEF_2),
     ("hgnc", "10021", "def_22"),
-    # ("hgnc", "id_23", "def_23"),
 ]
 SPECIES = [
     ("hgnc", "10020", "9606"),
     ("hgnc", "10021", "9606"),
     ("hgnc", "10023", "9606"),
 ]
-SYNONYMS = []
-XREFS = []
-RELS = []
+SYNONYMS: list[tuple[str, ...]] = []
+XREFS: list[tuple[str, ...]] = []
+RELS: list[tuple[str, ...]] = []
 
 
 def _write(path, data, *last):
@@ -66,10 +64,10 @@ def _write(path, data, *last):
 class BackendTestCase(unittest.TestCase):
     """A mixin for checking the backend."""
 
-    backend_cls: ClassVar[Type[Backend]]
+    backend_cls: ClassVar[type[Backend]]
     counts: ClassVar[bool]
 
-    def help_check(self, backend: Backend, counts: bool = True):
+    def help_check(self, backend: Backend, counts: bool = True) -> None:
         """Check backend."""
         self.assertTrue(issubclass(self.backend_cls, Backend))
         self.assertIsInstance(backend, self.backend_cls)
@@ -126,9 +124,10 @@ class BackendTestCase(unittest.TestCase):
         self.assertEqual("9606", r["species"])
         self.assertEqual("hgnc:10020", r["query"])
 
-    def assert_go_example(self, r):
+    def assert_go_example(self, r: Mapping[str, Any] | None) -> None:
         """Run test of the canonical GO example."""
-        self.assertIsNotNone(r)
+        if r is None:
+            self.fail(msg="result should not be none")
         self.assertEqual("go", r["prefix"])
         self.assertEqual("0000073", r["identifier"])
         self.assertEqual("initial mitotic spindle pole body separation", r["name"])
@@ -136,7 +135,7 @@ class BackendTestCase(unittest.TestCase):
         self.assertEqual("go:0000073", r["query"])
         self.assertNotIn("species", r)
 
-    def assert_app_lookup(self, app: Flask):
+    def assert_app_lookup(self, app: Flask) -> None:
         """Run the test on looking up the canonical GO example."""
         with app.test_client() as client:
             res = client.get(f"/{DEFAULT_ENDPOINT}/go:0000073")
@@ -160,8 +159,8 @@ class TestRawSQLBackend(BackendTestCase):
         self.synonyms_table = "synonyms"
         self.xrefs_table = "xrefs"
         self.rels_table = "rels"
-        with tempfile.TemporaryDirectory() as directory:
-            directory = Path(directory)
+        with tempfile.TemporaryDirectory() as directory_:
+            directory = Path(directory_)
             refs_path = directory / "refs.tsv.gz"
             alts_path = directory / "alts.tsv.gz"
             defs_path = directory / "defs.tsv.gz"
@@ -212,11 +211,11 @@ class TestRawSQLBackend(BackendTestCase):
                 rels_table=self.rels_table,
             )
 
-    def test_backend(self):
+    def test_backend(self) -> None:
         """Test the raw SQL backend."""
         self.help_check(self.backend, counts=self.counts)
 
-    def test_app(self):
+    def test_app(self) -> None:
         """Test the app works properly."""
         app = get_app_from_backend(self.backend)
         self.assert_app_lookup(app)
@@ -234,11 +233,11 @@ class TestMemoryBackend(BackendTestCase):
         _ = pyobo.get_id_name_mapping("go", strict=False)
         self.backend = get_backend(lazy=True)
 
-    def test_backend(self):
+    def test_backend(self) -> None:
         """Test the in-memory backend."""
         self.help_check(self.backend, counts=self.counts)
 
-    def test_app(self):
+    def test_app(self) -> None:
         """Test the app works properly."""
         app = get_app_from_backend(self.backend)
         self.assert_app_lookup(app)

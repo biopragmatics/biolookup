@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """Backends for the Biolookup Service."""
 
 from .backend import Backend
@@ -10,8 +8,8 @@ from .sql_backend import RawSQLBackend
 
 __all__ = [
     "Backend",
-    "RawSQLBackend",
     "MemoryBackend",
+    "RawSQLBackend",
     "RemoteBackend",
     "get_backend",
 ]

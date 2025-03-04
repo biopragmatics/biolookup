@@ -1,21 +1,19 @@
-# -*- coding: utf-8 -*-
-
 """Upload the Ooh Na Na nomenclature database to PostgreSQL.
 
-After installing with pip, run with: ``biolookup load``.
-This will take care of downloading the latest data from Zenodo (you
-might need to set up an API key) and loading it into a SQL database.
-Use ``--help`` for options on configuration.
+After installing with pip, run with: ``biolookup load``. This will take care of
+downloading the latest data from Zenodo (you might need to set up an API key) and
+loading it into a SQL database. Use ``--help`` for options on configuration.
 """
 
 import gzip
 import io
 import logging
 import time
+from collections.abc import Iterable
 from contextlib import closing
 from pathlib import Path
 from textwrap import dedent
-from typing import Iterable, Optional, Union
+from typing import Any
 
 import click
 import pystow
@@ -53,9 +51,9 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 
-def echo(s, **kwargs) -> None:
+def echo(s: str, **kwargs: Any) -> None:
     """Wrap echo with time logging."""
-    click.echo(f'[{time.strftime("%Y-%m-%d %H:%M:%S")}] ', nl="")
+    click.echo(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] ", nl=False)
     click.secho(s, **kwargs)
 
 
@@ -76,16 +74,16 @@ class Loader:
 
     def __init__(
         self,
-        uri: Union[None, str, Engine] = None,
+        uri: None | str | Engine = None,
         *,
-        refs_table: Optional[str] = None,
-        alts_table: Optional[str] = None,
-        defs_table: Optional[str] = None,
-        species_table: Optional[str] = None,
-        derived_table: Optional[str] = None,
-        synonyms_table: Optional[str] = None,
-        xrefs_table: Optional[str] = None,
-        rels_table: Optional[str] = None,
+        refs_table: str | None = None,
+        alts_table: str | None = None,
+        defs_table: str | None = None,
+        species_table: str | None = None,
+        derived_table: str | None = None,
+        synonyms_table: str | None = None,
+        xrefs_table: str | None = None,
+        rels_table: str | None = None,
     ):
         """Load the database.
 
@@ -112,7 +110,7 @@ class Loader:
     def load_alts(
         self,
         *,
-        path: Union[None, str, Path] = None,
+        path: None | str | Path = None,
         test: bool = False,
     ):
         """Load the alternative identifiers table."""
@@ -129,7 +127,7 @@ class Loader:
     def load_definition(
         self,
         *,
-        path: Union[None, str, Path] = None,
+        path: None | str | Path = None,
         test: bool = False,
     ):
         """Load the definitions table."""
@@ -144,7 +142,7 @@ class Loader:
     def load_species(
         self,
         *,
-        path: Union[None, str, Path] = None,
+        path: None | str | Path = None,
         test: bool = False,
     ):
         """Load the species table."""
@@ -159,7 +157,7 @@ class Loader:
     def load_name(
         self,
         *,
-        path: Union[None, str, Path] = None,
+        path: None | str | Path = None,
         test: bool = False,
     ):
         """Load the names table."""
@@ -174,7 +172,7 @@ class Loader:
     def load_synonyms(
         self,
         *,
-        path: Union[None, str, Path] = None,
+        path: None | str | Path = None,
         test: bool = False,
     ):
         """Load the synonyms table."""
@@ -190,7 +188,7 @@ class Loader:
     def load_xrefs(
         self,
         *,
-        path: Union[None, str, Path] = None,
+        path: None | str | Path = None,
         test: bool = False,
     ):
         """Load xrefs table."""
@@ -207,7 +205,7 @@ class Loader:
     def load_rels(
         self,
         *,
-        path: Union[None, str, Path] = None,
+        path: None | str | Path = None,
         test: bool = False,
     ):
         """Load relations table."""
@@ -228,14 +226,14 @@ class Loader:
     @staticmethod
     def _create_table_ddl(
         table: str,
-        target_col: Union[str, Iterable[str]],
-        target_col_type: Union[str, Iterable[str]],
+        target_col: str | Iterable[str],
+        target_col_type: str | Iterable[str],
     ) -> str:
         if isinstance(target_col, str) and isinstance(target_col_type, str):
             column_defs = f"{target_col} {target_col_type} NOT NULL"
         else:
             column_defs = ",\n".join(
-                f"{x} {y} NOT NULL" for x, y in zip(target_col, target_col_type)
+                f"{x} {y} NOT NULL" for x, y in zip(target_col, target_col_type, strict=False)
             )
 
         # tidbit: the largest name's length is 2936 characters
@@ -268,7 +266,7 @@ class Loader:
         ).rstrip()
 
     @staticmethod
-    def _create_copy_ddl(table: str, target_col: Union[str, Iterable[str]]) -> str:
+    def _create_copy_ddl(table: str, target_col: str | Iterable[str]) -> str:
         if not isinstance(target_col, str):
             target_col = ", ".join(target_col)
         return dedent(
@@ -307,7 +305,9 @@ class Loader:
             with gzip.open(path, "rt") as file:
                 if test:
                     echo(f"Loading testing data (rows={TEST_N}) from {path}")
-                    sio = io.StringIO("".join(line for line, _ in zip(file, range(TEST_N + 1))))
+                    sio = io.StringIO(
+                        "".join(line for line, _ in zip(file, range(TEST_N + 1), strict=False))
+                    )
                     sio.seek(0)
                     cursor.copy_expert(sql, sio)
                 else:
@@ -328,7 +328,7 @@ class Loader:
             echo("Commit ended")
 
     @staticmethod
-    def _get_target_col_type(use_varchar: bool, target_col_size: Optional[int] = None) -> str:
+    def _get_target_col_type(use_varchar: bool, target_col_size: int | None = None) -> str:
         if use_varchar:
             if target_col_size is None:
                 raise ValueError("target_col_size should not be none when use_varchar=True")
@@ -339,11 +339,11 @@ class Loader:
     def _load_three_col_table(
         self,
         table: str,
-        path: Union[str, Path],
+        path: str | Path,
         target_col: str,
         *,
         test: bool = False,
-        target_col_size: Optional[int] = None,
+        target_col_size: int | None = None,
         add_unique_constraints: bool = True,
         add_reverse_index: bool = False,
         use_varchar: bool = True,
@@ -364,9 +364,9 @@ class Loader:
     def _load_table(
         self,
         table: str,
-        path: Union[str, Path],
-        target_col: Union[str, Iterable[str]],
-        target_col_type: Union[str, Iterable[str]],
+        path: str | Path,
+        target_col: str | Iterable[str],
+        target_col_type: str | Iterable[str],
         *,
         test: bool = False,
         add_unique_constraints: bool = True,
@@ -400,13 +400,13 @@ class Loader:
                     run(cursor, index_reverse_statement, "reversing index")
 
         with closing(self.engine.raw_connection()) as connection:
-            connection.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-            with connection.cursor() as cursor:
+            connection.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)  # type:ignore
+            with connection.cursor() as cursor:  # type:ignore
                 run(cursor, create_summary_statement, "creating summary table")
 
         with closing(self.engine.raw_connection()) as connection:
-            connection.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-            with connection.cursor() as cursor:
+            connection.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)  # type:ignore
+            with connection.cursor() as cursor:  # type:ignore
                 for x in (table, f"{table}_summary"):
                     sql = f"VACUUM ANALYSE {x};"
                     echo(sql, fg="yellow")
@@ -416,7 +416,7 @@ class Loader:
             select_statement = f"SELECT * FROM {table} LIMIT 10;"  # noqa:S608
             click.secho("Example query:", fg="green", bold=True)
             click.secho(select_statement, fg="green")
-            result = connection.execute(select_statement)
+            result = connection.execute(select_statement)  # type:ignore
             if isinstance(target_col, str):
                 headers = ["id", "prefix", "identifier", target_col]
             else:
@@ -424,10 +424,12 @@ class Loader:
             click.echo(tabulate(map(tuple, result), headers=headers))
 
             # Summary table
-            select_statement = f"SELECT * FROM {table}_summary ORDER BY identifier_count DESC LIMIT 10 ;"  # noqa:S608
+            select_statement = (
+                f"SELECT * FROM {table}_summary ORDER BY identifier_count DESC LIMIT 10 ;"  # noqa:S608
+            )
             click.secho("Top entries in summary view:", fg="green", bold=True)
             click.secho(select_statement, fg="green")
-            result = connection.execute(select_statement)
+            result = connection.execute(select_statement)  # type:ignore
             click.echo(tabulate(map(tuple, result), headers=["prefix", "count"]))
 
     def derive_table(self):
@@ -487,23 +489,23 @@ def load_date(*, date: str, **kwargs):
 
 def load(
     *,
-    refs_path: Union[None, str, Path] = None,
-    alts_path: Union[None, str, Path] = None,
-    defs_path: Union[None, str, Path] = None,
-    species_path: Union[None, str, Path] = None,
-    synonyms_path: Union[None, str, Path] = None,
-    xrefs_path: Union[None, str, Path] = None,
-    rels_path: Union[None, str, Path] = None,
-    refs_table: Optional[str] = None,
-    alts_table: Optional[str] = None,
-    defs_table: Optional[str] = None,
-    species_table: Optional[str] = None,
-    derived_table: Optional[str] = None,
-    synonyms_table: Optional[str] = None,
-    xrefs_table: Optional[str] = None,
-    rels_table: Optional[str] = None,
+    refs_path: None | str | Path = None,
+    alts_path: None | str | Path = None,
+    defs_path: None | str | Path = None,
+    species_path: None | str | Path = None,
+    synonyms_path: None | str | Path = None,
+    xrefs_path: None | str | Path = None,
+    rels_path: None | str | Path = None,
+    refs_table: str | None = None,
+    alts_table: str | None = None,
+    defs_table: str | None = None,
+    species_table: str | None = None,
+    derived_table: str | None = None,
+    synonyms_table: str | None = None,
+    xrefs_table: str | None = None,
+    rels_table: str | None = None,
     test: bool = False,
-    uri: Optional[str] = None,
+    uri: str | None = None,
 ) -> None:
     """Load the database.
 
@@ -547,7 +549,7 @@ def load(
     echo("Done")
 
 
-def _ensure_engine(engine: Union[None, str, Engine] = None) -> Engine:
+def _ensure_engine(engine: None | str | Engine = None) -> Engine:
     if engine is None:
         engine = get_sqlalchemy_uri()
     if isinstance(engine, str):

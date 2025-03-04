@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """Biolookup Service CLI.
 
 Run with ``biolookup web``.

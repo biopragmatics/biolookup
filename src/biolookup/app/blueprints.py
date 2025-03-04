@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """A reusable blueprint for the Biolookup Service."""
 
 import logging
@@ -27,10 +25,11 @@ def lookup(curie: str):
     about an entity via its CURIE.
 
     - ``doid:14330``, an exact match to the CURIE for Parkinson's disease in the Disease Ontology
-    - ``DOID:14330``, a close match to the CURIE for Parkinson's disease in the Disease Ontology, only differing
-      by capitalization
-    - ``do:14330``, a match to doid via synonyms in the Bioregistry. Still resolves to Parkinson's disease
-      in the Disease Ontology.
+    - ``DOID:14330``, a close match to the CURIE for Parkinson's disease in the Disease Ontology,
+      only differing by capitalization
+    - ``do:14330``, a match to doid via synonyms in the Bioregistry. Still resolves to Parkinson's
+      disease in the Disease Ontology.
+
     ---
     parameters:
       - name: curie
@@ -39,7 +38,7 @@ def lookup(curie: str):
         required: true
         type: string
         example: doid:14330
-    """  # noqa:DAR101,DAR201
+    """
     logger.debug("querying %s", curie)
     start = time.time()
     rv = backend.lookup(curie)
@@ -59,7 +58,7 @@ def size():
     """Return how much memory we're taking.
 
     Doesn't work if you're running with Gunicorn because it makes child processes.
-    """  # noqa:DAR201
+    """
     try:
         import psutil
     except ImportError:

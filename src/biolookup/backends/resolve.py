@@ -1,12 +1,10 @@
-# -*- coding: utf-8 -*-
-
 """A resolution function for BLS backends."""
 
 import gzip
 import logging
 from collections import Counter, defaultdict
+from collections.abc import Mapping
 from pathlib import Path
-from typing import DefaultDict, Dict, Mapping, Optional, Union
 
 import pandas as pd
 from sqlalchemy.engine import Engine
@@ -23,22 +21,22 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 
-def get_backend(
+def get_backend(  # noqa:C901
     *,
-    name_data: Union[None, str, pd.DataFrame] = None,
-    alts_data: Union[None, str, pd.DataFrame] = None,
-    defs_data: Union[None, str, pd.DataFrame] = None,
-    species_data: Union[None, str, pd.DataFrame] = None,
+    name_data: None | str | pd.DataFrame = None,
+    alts_data: None | str | pd.DataFrame = None,
+    defs_data: None | str | pd.DataFrame = None,
+    species_data: None | str | pd.DataFrame = None,
     lazy: bool = False,
     sql: bool = False,
-    uri: Union[None, str, Engine] = None,
-    refs_table: Optional[str] = None,
-    alts_table: Optional[str] = None,
-    defs_table: Optional[str] = None,
-    species_table: Optional[str] = None,
-    synonyms_table: Optional[str] = None,
-    xrefs_table: Optional[str] = None,
-    rels_table: Optional[str] = None,
+    uri: None | str | Engine = None,
+    refs_table: str | None = None,
+    alts_table: str | None = None,
+    defs_table: str | None = None,
+    species_table: str | None = None,
+    synonyms_table: str | None = None,
+    xrefs_table: str | None = None,
+    rels_table: str | None = None,
 ) -> Backend:
     """Get the backend based on the input data."""
     if sql:
@@ -121,9 +119,9 @@ def get_backend(
 
 
 def _get_lookup_from_df(
-    df: pd.DataFrame, desc: Optional[str] = None
+    df: pd.DataFrame, desc: str | None = None
 ) -> Mapping[str, Mapping[str, str]]:
-    lookup: DefaultDict[str, Dict[str, str]] = defaultdict(dict)
+    lookup: defaultdict[str, dict[str, str]] = defaultdict(dict)
     if desc is None:
         desc = "processing mappings from df"
     it = tqdm(df.values, total=len(df.index), desc=desc, unit_scale=True)
@@ -133,9 +131,9 @@ def _get_lookup_from_df(
 
 
 def _get_lookup_from_path(
-    path: Union[str, Path], desc: Optional[str] = None
+    path: str | Path, desc: str | None = None
 ) -> Mapping[str, Mapping[str, str]]:
-    lookup: DefaultDict[str, Dict[str, str]] = defaultdict(dict)
+    lookup: defaultdict[str, dict[str, str]] = defaultdict(dict)
     if desc is None:
         desc = "loading mappings"
     with gzip.open(path, "rt") as file:
@@ -147,10 +145,10 @@ def _get_lookup_from_path(
 
 
 def _prepare_backend_with_lookup(
-    name_lookup: Optional[Mapping[str, Mapping[str, str]]] = None,
-    alts_lookup: Optional[Mapping[str, Mapping[str, str]]] = None,
-    defs_lookup: Optional[Mapping[str, Mapping[str, str]]] = None,
-    species_lookup: Optional[Mapping[str, Mapping[str, str]]] = None,
+    name_lookup: Mapping[str, Mapping[str, str]] | None = None,
+    alts_lookup: Mapping[str, Mapping[str, str]] | None = None,
+    defs_lookup: Mapping[str, Mapping[str, str]] | None = None,
+    species_lookup: Mapping[str, Mapping[str, str]] | None = None,
 ) -> Backend:
     import pyobo
 

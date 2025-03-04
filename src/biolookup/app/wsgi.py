@@ -1,12 +1,9 @@
-# -*- coding: utf-8 -*-
-
 """Biolookup Service.
 
 Run with ``python -m biolookup.app``
 """
 
 import logging
-from typing import Optional, Union
 
 import bioregistry
 import pandas as pd
@@ -112,32 +109,32 @@ def entity(curie: str):
 
 
 def get_app(
-    name_data: Union[None, str, pd.DataFrame] = None,
-    alts_data: Union[None, str, pd.DataFrame] = None,
-    defs_data: Union[None, str, pd.DataFrame] = None,
-    species_data: Union[None, str, pd.DataFrame] = None,
+    name_data: None | str | pd.DataFrame = None,
+    alts_data: None | str | pd.DataFrame = None,
+    defs_data: None | str | pd.DataFrame = None,
+    species_data: None | str | pd.DataFrame = None,
     lazy: bool = False,
     sql: bool = False,
-    uri: Optional[str] = None,
-    refs_table: Optional[str] = None,
-    alts_table: Optional[str] = None,
-    defs_table: Optional[str] = None,
-    species_table: Optional[str] = None,
+    uri: str | None = None,
+    refs_table: str | None = None,
+    alts_table: str | None = None,
+    defs_table: str | None = None,
+    species_table: str | None = None,
 ) -> Flask:
     """Build a flask app.
 
-    :param name_data: If none, uses the internal PyOBO loader. If a string, assumes is a gzip and reads a
-         dataframe from there. If a dataframe, uses it directly. Assumes data frame has 3 columns - prefix,
-         identifier, and name and is a TSV.
-    :param alts_data: If none, uses the internal PyOBO loader. If a string, assumes is a gzip and reads a
-         dataframe from there. If a dataframe, uses it directly. Assumes data frame has 3 columns - prefix,
-         identifier, and alt identifier and is a TSV.
-    :param defs_data: If none, uses the internal PyOBO loader. If a string, assumes is a gzip and reads a
-         dataframe from there. If a dataframe, uses it directly. Assumes data frame has 3 columns - prefix,
-         identifier, and definition and is a TSV.
-    :param species_data: If none, uses the internal PyOBO loader. If a string, assumes is a gzip and reads a
-         dataframe from there. If a dataframe, uses it directly. Assumes data frame has 3 columns - prefix,
-         identifier, and species and is a TSV.
+    :param name_data: If none, uses the internal PyOBO loader. If a string, assumes is a
+        gzip and reads a dataframe from there. If a dataframe, uses it directly. Assumes
+        data frame has 3 columns - prefix, identifier, and name and is a TSV.
+    :param alts_data: If none, uses the internal PyOBO loader. If a string, assumes is a
+        gzip and reads a dataframe from there. If a dataframe, uses it directly. Assumes
+        data frame has 3 columns - prefix, identifier, and alt identifier and is a TSV.
+    :param defs_data: If none, uses the internal PyOBO loader. If a string, assumes is a
+        gzip and reads a dataframe from there. If a dataframe, uses it directly. Assumes
+        data frame has 3 columns - prefix, identifier, and definition and is a TSV.
+    :param species_data: If none, uses the internal PyOBO loader. If a string, assumes
+        is a gzip and reads a dataframe from there. If a dataframe, uses it directly.
+        Assumes data frame has 3 columns - prefix, identifier, and species and is a TSV.
     :param lazy: don't load the full cache into memory to run
     :param sql: use a remote SQL database
     :param uri: If using a remote SQL database, specify a non-default connection string
@@ -145,7 +142,8 @@ def get_app(
     :param alts_table: Name of the alternative identifiers table in the SQL database
     :param defs_table: Name of the definitions table in the SQL database
     :param species_table: Name of the species table in the SQL database
-    :return: A pre-built flask app.
+
+    :returns: A pre-built flask app.
     """
     backend = get_backend(
         name_data=name_data,
@@ -195,9 +193,6 @@ def get_app_from_backend(backend: Backend) -> Flask:
     # Make bioregistry available in all jinja templates
     app.jinja_env.globals.update(bioregistry=bioregistry)
 
-    @app.before_first_request
-    def _before_first_request():
-        logger.info("before_first_request")
-        backend.count_all()
+    backend.count_all()
 
     return app
