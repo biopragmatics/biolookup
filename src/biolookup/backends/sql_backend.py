@@ -142,8 +142,7 @@ class RawSQLBackend(Backend):
 
     def _get_one(self, sql: str):
         with self.engine.connect() as connection:  # type:ignore
-            result = connection.execute(sql).fetchone()  # type:ignore
-            return result[0]
+            return connection.execute(text(sql)).scalar()  # type:ignore
 
     def summarize_names(self) -> Counter:
         """Return the results of a SQL query that dumps the name summary table."""
@@ -175,17 +174,17 @@ class RawSQLBackend(Backend):
 
     @lru_cache  # noqa:B019
     def _get_summary(self, table: str) -> Counter:
-        sql = f"SELECT prefix, identifier_count FROM {table}_summary;"
+        sql = text(f"SELECT prefix, identifier_count FROM {table}_summary;")
         with self.engine.connect() as connection:  # type:ignore
             result = connection.execute(sql).fetchall()  # type:ignore
-        return Counter(dict(result))
+        return Counter(dict(result))  # type:ignore
 
     @lru_cache  # noqa:B019
     def has_prefix(self, prefix: str) -> bool:
         """Check for the prefix with a SQL query."""
         sql = text(f"SELECT EXISTS(SELECT 1 from {self.derived_table} WHERE prefix = :prefix);")
         with self.engine.connect() as connection:  # type:ignore
-            result = connection.execute(sql, prefix=prefix).fetchone()  # type:ignore
+            result = connection.execute(sql, {"prefix": prefix}).fetchone()  # type:ignore
         return bool(result)
 
     @lru_cache(maxsize=100_000)  # noqa:B019
@@ -199,8 +198,8 @@ class RawSQLBackend(Backend):
         """
         )
         with self.engine.connect() as connection:  # type:ignore
-            result = connection.execute(sql, prefix=prefix, alt=identifier).fetchone()  # type:ignore
-        return result[0] if result else identifier
+            result = connection.execute(sql, {"prefix": prefix, "alt": identifier}).scalar()  # type:ignore
+        return result if result else identifier
 
     def get_name(self, prefix: str, identifier: str) -> str | None:
         """Get the name with a SQL query to the names table."""
@@ -224,10 +223,7 @@ class RawSQLBackend(Backend):
         """
         )
         with self.engine.connect() as connection:  # type:ignore
-            result = connection.execute(sql, prefix=prefix, identifier=identifier).fetchone()  # type:ignore
-            if result:
-                return result[0]
-        return None
+            return connection.execute(sql, {"prefix": prefix, "identifier": identifier}).scalar()  # type:ignore
 
     def get_synonyms(self, prefix: str, identifier: str) -> list[str]:
         """Get synonyms with a SQL query to the synonyms table."""
@@ -274,12 +270,14 @@ class RawSQLBackend(Backend):
         self, columns: str, table: str, prefix: str, identifier: str
     ) -> Iterable[tuple[str]]:
         sql = text(
-            rf"""\
+            rf"""
             SELECT {columns}
             FROM {table}
             WHERE prefix = :prefix and identifier = :identifier;
         """
         )
         with self.engine.connect() as connection:  # type:ignore
-            results = connection.execute(sql, prefix=prefix, identifier=identifier).fetchall()  # type:ignore
-        return results
+            results = connection.execute(
+                sql, {"prefix": prefix, "identifier": identifier}
+            ).fetchall()  # type:ignore
+        return results  # type:ignore

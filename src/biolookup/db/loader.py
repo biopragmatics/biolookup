@@ -27,7 +27,7 @@ from pyobo.resource_utils import (
     ensure_species,
     ensure_synonyms,
 )
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 from tabulate import tabulate
 
@@ -413,7 +413,7 @@ class Loader:
                     cursor.execute(sql)
 
         with self.engine.connect() as connection:
-            select_statement = f"SELECT * FROM {table} LIMIT 10;"  # noqa:S608
+            select_statement = text(f"SELECT * FROM {table} LIMIT 10;")  # noqa:S608
             click.secho("Example query:", fg="green", bold=True)
             click.secho(select_statement, fg="green")
             result = connection.execute(select_statement)  # type:ignore
@@ -424,7 +424,7 @@ class Loader:
             click.echo(tabulate(map(tuple, result), headers=headers))
 
             # Summary table
-            select_statement = (
+            select_statement = text(
                 f"SELECT * FROM {table}_summary ORDER BY identifier_count DESC LIMIT 10 ;"  # noqa:S608
             )
             click.secho("Top entries in summary view:", fg="green", bold=True)
