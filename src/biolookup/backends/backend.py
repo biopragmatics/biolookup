@@ -2,7 +2,7 @@
 
 import logging
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, TypeAlias
 
 import bioregistry
 import pandas as pd
@@ -14,6 +14,9 @@ __all__ = [
 ]
 
 logger = logging.getLogger(__name__)
+
+Prefix: TypeAlias = str
+Identifier: TypeAlias = str
 
 
 class LookupResult(BaseModel):
@@ -70,31 +73,31 @@ class Backend:
         logger.warning(f"getting relations is not yet implemented for {self.__class__}")
         return []
 
-    def summarize_names(self) -> Mapping[str, Any]:
+    def summarize_names(self) -> Mapping[Prefix, Any]:
         """Summarize the names."""
         raise NotImplementedError
 
-    def summarize_alts(self) -> Mapping[str, Any]:
+    def summarize_alts(self) -> Mapping[Prefix, Any]:
         """Summarize the alternate identifiers."""
         raise NotImplementedError
 
-    def summarize_definitions(self) -> Mapping[str, Any]:
+    def summarize_definitions(self) -> Mapping[Prefix, Any]:
         """Summarize the definitions."""
         raise NotImplementedError
 
-    def summarize_species(self) -> Mapping[str, Any]:
+    def summarize_species(self) -> Mapping[Prefix, Any]:
         """Summarize the species."""
         raise NotImplementedError
 
-    def summarize_synonyms(self) -> Mapping[str, Any]:
+    def summarize_synonyms(self) -> Mapping[Prefix, Any]:
         """Summarize the synonyms."""
         raise NotImplementedError
 
-    def summarize_xrefs(self) -> Mapping[str, Any]:
+    def summarize_xrefs(self) -> Mapping[Prefix, Any]:
         """Summarize the xrefs."""
         raise NotImplementedError
 
-    def summarize_rels(self) -> Mapping[str, Any]:
+    def summarize_rels(self) -> Mapping[Prefix, Any]:
         """Summarize the relations."""
         raise NotImplementedError
 
@@ -218,7 +221,7 @@ class Backend:
                     bioregistry.get_name(prefix),
                     bioregistry.get_homepage(prefix),
                     example := bioregistry.get_example(prefix),
-                    bioregistry.get_link(prefix, example) if example else None,
+                    bioregistry.get_iri(prefix, example) if example else None,
                     names_count,
                     summary_alts.get(prefix, 0),
                     summary_defs.get(prefix, 0),

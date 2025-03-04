@@ -4,8 +4,10 @@ Run with ``python -m biolookup.app``
 """
 
 import logging
+import os
 
 import bioregistry
+import flask
 import pandas as pd
 from a2wsgi import WSGIMiddleware
 from fastapi import FastAPI
@@ -72,10 +74,12 @@ def home():
 @ui.route("/statistics")
 def summary():
     """Serve the summary page."""
-    return render_template(
-        "statistics.html",
-        summary_df=backend.summary_df(),
-    )
+    try:
+        summary_df = backend.summary_df()
+    except NotImplementedError:
+        flask.flash("summary generation is not enabled", category="warning")
+        return redirect(url_for("ui." + home.__name__))
+    return render_template("statistics.html", summary_df=summary_df)
 
 
 @ui.route("/about")
@@ -171,6 +175,7 @@ def get_app_from_backend(backend: Backend) -> FastAPI:
     Bootstrap(app)
     app.config["resolver_backend"] = backend
     app.register_blueprint(ui)
+    app.secret_key = os.urandom(8)
 
     fast_api = FastAPI(
         title="Biolookup Service API",

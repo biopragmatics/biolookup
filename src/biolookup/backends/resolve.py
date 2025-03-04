@@ -2,9 +2,8 @@
 
 import gzip
 import logging
-from collections import Counter, defaultdict
+from collections import defaultdict
 from collections.abc import Mapping
-from functools import partial
 from pathlib import Path
 
 import pandas as pd
@@ -12,7 +11,7 @@ from sqlalchemy.engine import Engine
 from tqdm import tqdm
 
 from .backend import Backend
-from .memory_backend import MemoryBackend
+from .memory_backend import _prepare_backend_with_lookup
 from .sql_backend import RawSQLBackend
 
 __all__ = [
@@ -143,44 +142,3 @@ def _get_lookup_from_path(
             prefix, identifier, name = line.strip().split("\t")
             lookup[prefix][identifier] = name
     return dict(lookup)
-
-
-def _prepare_backend_with_lookup(
-    name_lookup: Mapping[str, Mapping[str, str]] | None = None,
-    alts_lookup: Mapping[str, Mapping[str, str]] | None = None,
-    defs_lookup: Mapping[str, Mapping[str, str]] | None = None,
-    species_lookup: Mapping[str, Mapping[str, str]] | None = None,
-) -> Backend:
-    import pyobo
-
-    get_id_name_mapping, summarize_names = _h(
-        name_lookup, partial(pyobo.get_id_name_mapping, strict=False)
-    )
-    get_id_species_mapping, summarize_species = _h(
-        species_lookup, partial(pyobo.get_id_species_mapping, strict=False)
-    )
-    get_alts_to_id, summarize_alts = _h(alts_lookup, partial(pyobo.get_alts_to_id, strict=False))
-    get_id_definition_mapping, summarize_definitions = _h(
-        defs_lookup, partial(pyobo.get_id_definition_mapping, strict=False)
-    )
-
-    return MemoryBackend(
-        get_id_name_mapping=get_id_name_mapping,
-        get_id_species_mapping=get_id_species_mapping,
-        get_alts_to_id=get_alts_to_id,
-        get_id_definition_mapping=get_id_definition_mapping,
-        summarize_names=summarize_names,
-        summarize_alts=summarize_alts,
-        summarize_definitions=summarize_definitions,
-        summarize_species=summarize_species,
-    )
-
-
-def _h(lookup, alt_lookup):
-    if lookup is None:  # lazy mode, will download/cache data as needed
-        return alt_lookup, Counter
-
-    def _summarize():
-        return Counter({k: len(v) for k, v in lookup.items()})
-
-    return lookup.get, _summarize

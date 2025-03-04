@@ -4,7 +4,7 @@ import logging
 import os
 import time
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Path, Request
 
 from ..backends.backend import LookupResult
 from ..constants import DEFAULT_URL
@@ -18,26 +18,25 @@ biolookup_blueprint = APIRouter(prefix="/api")
 
 
 @biolookup_blueprint.get("/lookup/{curie}", response_model=LookupResult)
-def lookup(curie: str, request: Request):
-    """Lookup a CURIE.
+def lookup(
+    request: Request,
+    curie: str = Path(
+        ...,
+        description="A compact uniform resource identifier (CURIE) of an entity",
+        examples=["doid:14330"],
+    ),
+) -> LookupResult:
+    """Lookup metadata and ontological information for a biomedical entity.
 
-    The goal of this endpoint is to lookup metadata and ontological information
-    about an entity via its CURIE.
+    This endpoint uses the Bioregistry to recognize and standardize
+    compact uniform resource identifiers (CURIEs) for biomedical entities.
+    For example:
 
     - ``doid:14330``, an exact match to the CURIE for Parkinson's disease in the Disease Ontology
     - ``DOID:14330``, a close match to the CURIE for Parkinson's disease in the Disease Ontology,
       only differing by capitalization
     - ``do:14330``, a match to doid via synonyms in the Bioregistry. Still resolves to Parkinson's
       disease in the Disease Ontology.
-
-    ---
-    parameters:
-      - name: curie
-        in: path
-        description: compact uniform resource identifier (CURIE) of the entity
-        required: true
-        type: string
-        example: doid:14330
     """
     backend = request.app.state.backend
     logger.debug("querying %s", curie)

@@ -31,7 +31,7 @@
                         </button>
                         <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                             <a class="dropdown-item"
-                               href="{{ url_for('biolookup.lookup', curie=bioregistry.curie_to_str(res.prefix, res.identifier) ) }}">
+                               href="/api/lookup/{{ bioregistry.curie_to_str(res.prefix, res.identifier) }}">
                                 JSON <i class="fas fa-download"></i>
                             </a>
                         </div>

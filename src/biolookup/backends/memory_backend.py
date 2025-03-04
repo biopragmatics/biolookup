@@ -1,11 +1,13 @@
 """An in-memory backend for the Biolookup Service based on PyOBO functions."""
 
+from collections import Counter
 from collections.abc import Callable, Mapping
-from typing import Any
+from functools import partial
+from typing import Any, TypeVar
 
 import pyobo
 
-from .backend import Backend
+from .backend import Backend, Identifier, Prefix
 
 __all__ = [
     "MemoryBackend",
@@ -22,10 +24,11 @@ class MemoryBackend(Backend):
         get_id_species_mapping,
         get_alts_to_id,
         get_id_synonyms_mapping=None,
-        summarize_names: Callable[[], Mapping[str, Any]] | None,
-        summarize_alts: Callable[[], Mapping[str, Any]] | None = None,
-        summarize_definitions: Callable[[], Mapping[str, Any]] | None = None,
-        summarize_species: Callable[[], Mapping[str, Any]] | None = None,
+        summarize_names: Callable[[], Mapping[Prefix, Any]] | None,
+        summarize_alts: Callable[[], Mapping[Prefix, Any]] | None = None,
+        summarize_definitions: Callable[[], Mapping[Prefix, Any]] | None = None,
+        summarize_species: Callable[[], Mapping[Prefix, Any]] | None = None,
+        summarize_synonyms: Callable[[], Mapping[Prefix, Any]] | None = None,
         get_id_definition_mapping=None,
     ) -> None:
         """Initialize the in-memory backend.
@@ -49,6 +52,7 @@ class MemoryBackend(Backend):
         self._summarize_alts = summarize_alts
         self._summarize_definitions = summarize_definitions
         self._summarize_species = summarize_species
+        self._summarize_synonyms = summarize_synonyms
 
     def has_prefix(self, prefix: str) -> bool:
         """Check for the prefix using the id/name getter."""
@@ -124,3 +128,77 @@ class MemoryBackend(Backend):
     def count_species(self) -> int:
         """Count species using the species summary."""
         return sum(self.summarize_species().values())
+
+    def summarize_synonyms(self) -> Mapping[Prefix, Any]:
+        """Summarize the synonyms with the internal synonyms summary function, if available."""
+        if self._summarize_synonyms is None:
+            return {}
+        return self._summarize_synonyms()
+
+    def count_synonyms(self) -> int:
+        """Count species using the species summary."""
+        return sum(self.summarize_synonyms().values())
+
+
+def _prepare_backend_with_lookup(
+    name_lookup: Mapping[Prefix, Mapping[Identifier, str]] | None = None,
+    alts_lookup: Mapping[Prefix, Mapping[Identifier, str]] | None = None,
+    defs_lookup: Mapping[Prefix, Mapping[Identifier, str]] | None = None,
+    synonyms_lookup: Mapping[Prefix, Mapping[Identifier, list[str]]] | None = None,
+    species_lookup: Mapping[Prefix, Mapping[Identifier, str]] | None = None,
+) -> Backend:
+    get_id_name_mapping, summarize_names = _wrap_pyobo_lookup(
+        name_lookup, partial(pyobo.get_id_name_mapping, strict=False)
+    )
+    get_id_species_mapping, summarize_species = _wrap_pyobo_lookup(
+        species_lookup, partial(pyobo.get_id_species_mapping, strict=False)
+    )
+    get_alts_to_id, summarize_alts = _wrap_pyobo_lookup(
+        alts_lookup, partial(pyobo.get_alts_to_id, strict=False)
+    )
+    get_id_definition_mapping, summarize_definitions = _wrap_pyobo_lookup(
+        defs_lookup, partial(pyobo.get_id_definition_mapping, strict=False)
+    )
+    get_id_synonyms_mapping, summarize_synonyms = _wrap_pyobo_lookup(
+        synonyms_lookup, partial(pyobo.get_id_synonyms_mapping, strict=False)
+    )
+    return MemoryBackend(
+        get_id_name_mapping=get_id_name_mapping,
+        get_id_species_mapping=get_id_species_mapping,
+        get_alts_to_id=get_alts_to_id,
+        get_id_definition_mapping=get_id_definition_mapping,
+        get_id_synonyms_mapping=get_id_synonyms_mapping,
+        summarize_names=summarize_names,
+        summarize_alts=summarize_alts,
+        summarize_definitions=summarize_definitions,
+        summarize_species=summarize_species,
+        summarize_synonyms=summarize_synonyms,
+    )
+
+
+X = TypeVar("X")
+
+
+def _wrap_pyobo_lookup(
+    data: Mapping[Prefix, Mapping[Identifier, X]] | None,
+    func: Callable[[Prefix], Mapping[Identifier, X] | None],
+) -> tuple[Callable[[Prefix], Mapping[Identifier, X] | None], Callable[[], Counter[Prefix]]]:
+    if data is None:  # lazy mode, will download/cache data as needed
+        return func, Counter
+
+    def _summarize() -> Counter[Prefix]:
+        return Counter({k: len(v) for k, v in data.items()})
+
+    return data.get, _summarize
+
+
+def _main() -> None:
+    import click
+
+    backend = _prepare_backend_with_lookup()
+    result = backend.lookup("DOID:14330")
+    click.echo(result.model_dump_json(indent=2, exclude_none=True))
+
+
+if __name__ == "__main__":
+    _main()
