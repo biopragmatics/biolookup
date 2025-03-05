@@ -67,6 +67,7 @@ dependencies = [
     "fastapi",
     "a2wsgi",
     "pystow",
+    "bioregistry>=0.12.3",
 ]
 
 [project.optional-dependencies]
