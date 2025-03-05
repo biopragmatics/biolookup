@@ -11,6 +11,7 @@ import flask
 import pandas as pd
 from a2wsgi import WSGIMiddleware
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from flask import Blueprint, Flask, abort, redirect, render_template, url_for
 from flask_bootstrap import Bootstrap4 as Bootstrap
 from werkzeug.wrappers.response import Response
@@ -191,6 +192,16 @@ def get_app_from_backend(backend: Backend) -> FastAPI:
             "url": "https://github.com/biopragmatics/biolookup/blob/main/LICENSE",
         },
     )
+
+    # Add CORS middleware
+    fast_api.add_middleware(
+        CORSMiddleware,
+        allow_origins="*",
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
     fast_api.state.backend = backend
     fast_api.include_router(biolookup_blueprint)
     fast_api.mount("/", WSGIMiddleware(app))  # type:ignore
