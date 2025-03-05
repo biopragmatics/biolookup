@@ -30,7 +30,7 @@ class RemoteBackend(Backend):
         return LookupResult.model_validate(res.json())
 
 
-def _main():
+def _main() -> None:
     import click
 
     backend = RemoteBackend()

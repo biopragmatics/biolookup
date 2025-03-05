@@ -13,6 +13,7 @@ from a2wsgi import WSGIMiddleware
 from fastapi import FastAPI
 from flask import Blueprint, Flask, abort, redirect, render_template, url_for
 from flask_bootstrap import Bootstrap4 as Bootstrap
+from werkzeug.wrappers.response import Response
 
 from .blueprints import biolookup_blueprint
 from .proxies import backend
@@ -42,7 +43,7 @@ def _figure_number(n: int | None) -> tuple[float, str] | tuple[None, None]:
 
 
 @ui.route("/")
-def home():
+def home() -> str:
     """Serve the home page."""
     name_count, name_suffix = _figure_number(backend.count_names())
     alts_count, alts_suffix = _figure_number(backend.count_alts())
@@ -72,7 +73,7 @@ def home():
 
 
 @ui.route("/statistics")
-def summary():
+def summary() -> str | Response:
     """Serve the summary page."""
     try:
         summary_df = backend.summary_df()
@@ -83,25 +84,25 @@ def summary():
 
 
 @ui.route("/about")
-def about():
+def about() -> str:
     """Serve the about page."""
     return render_template("meta/about.html")
 
 
 @ui.route("/downloads")
-def downloads():
+def downloads() -> str:
     """Serve the downloads page."""
     return render_template("meta/download.html")
 
 
 @ui.route("/usage")
-def usage():
+def usage() -> str:
     """Serve the usage page."""
     return render_template("meta/access.html")
 
 
 @ui.route("/<curie>")
-def entity(curie: str):
+def entity(curie: str) -> str | Response:
     """Serve an entity page."""
     prefix, identifier = bioregistry.parse_curie(curie)
     if prefix is None:

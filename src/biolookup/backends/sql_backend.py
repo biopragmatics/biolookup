@@ -10,7 +10,7 @@ from typing import Any
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 
-from .backend import Backend
+from .backend import Backend, Prefix
 from ..constants import (
     ALTS_TABLE_NAME,
     DEFS_TABLE_NAME,
@@ -91,16 +91,16 @@ class RawSQLBackend(Backend):
         self.xrefs_table = xrefs_table or XREFS_NAME
         self.rels_table = rels_table or RELS_NAME
 
-    def _count_summary(self, table):
+    def _count_summary(self, table: str) -> int | None:
         return self._get_one(f"SELECT SUM(identifier_count) FROM {table}_summary;")
 
     @lru_cache(maxsize=1)  # noqa:B019
-    def count_names(self) -> int:
+    def count_names(self) -> int | None:
         """Get the number of names."""
         return self._count_summary(self.refs_table)
 
     @lru_cache(maxsize=1)  # noqa:B019
-    def count_prefixes(self) -> int:
+    def count_prefixes(self) -> int | None:
         """Count prefixes using a SQL query to the references summary table."""
         logger.info("counting prefixes")
         start = time.time()
@@ -109,7 +109,7 @@ class RawSQLBackend(Backend):
         return rv
 
     @lru_cache(maxsize=1)  # noqa:B019
-    def count_definitions(self) -> int:
+    def count_definitions(self) -> int | None:
         """Count definitions using a SQL query to the definitions summary table."""
         return self._count_summary(self.defs_table)
 
@@ -140,51 +140,51 @@ class RawSQLBackend(Backend):
         logger.info("counting alts")
         return self._get_one(f"SELECT COUNT(*) FROM {self.alts_table};")
 
-    def _get_one(self, sql: str):
-        with self.engine.connect() as connection:  # type:ignore
-            return connection.execute(text(sql)).scalar()  # type:ignore
+    def _get_one(self, sql: str) -> int | None:
+        with self.engine.connect() as connection:
+            return connection.execute(text(sql)).scalar()
 
-    def summarize_names(self) -> Counter:
+    def summarize_names(self) -> Counter[Prefix]:
         """Return the results of a SQL query that dumps the name summary table."""
         return self._get_summary(self.refs_table)
 
-    def summarize_alts(self) -> Counter:
+    def summarize_alts(self) -> Counter[Prefix]:
         """Return the results of a SQL query that dumps the alts summary table."""
         return self._get_summary(self.alts_table)
 
-    def summarize_definitions(self) -> Counter:
+    def summarize_definitions(self) -> Counter[Prefix]:
         """Return the results of a SQL query that dumps the definitions summary table."""
         return self._get_summary(self.defs_table)
 
-    def summarize_species(self) -> Counter:
+    def summarize_species(self) -> Counter[Prefix]:
         """Return the results of a SQL query that dumps the species summary table."""
         return self._get_summary(self.species_table)
 
-    def summarize_synonyms(self) -> Counter:
+    def summarize_synonyms(self) -> Counter[Prefix]:
         """Return the results of a SQL query that dumps the synonyms summary table."""
         return self._get_summary(self.synonyms_table)
 
-    def summarize_xrefs(self) -> Counter:
+    def summarize_xrefs(self) -> Counter[Prefix]:
         """Return the results of a SQL query that dumps the xrefs summary table."""
         return self._get_summary(self.xrefs_table)
 
-    def summarize_rels(self) -> Counter:
+    def summarize_rels(self) -> Counter[Prefix]:
         """Return the results of a SQL query that dumps the relations summary table."""
         return self._get_summary(self.rels_table)
 
     @lru_cache  # noqa:B019
-    def _get_summary(self, table: str) -> Counter:
+    def _get_summary(self, table: str) -> Counter[Prefix]:
         sql = text(f"SELECT prefix, identifier_count FROM {table}_summary;")
-        with self.engine.connect() as connection:  # type:ignore
-            result = connection.execute(sql).fetchall()  # type:ignore
+        with self.engine.connect() as connection:
+            result = connection.execute(sql).fetchall()
         return Counter(dict(result))  # type:ignore
 
     @lru_cache  # noqa:B019
     def has_prefix(self, prefix: str) -> bool:
         """Check for the prefix with a SQL query."""
         sql = text(f"SELECT EXISTS(SELECT 1 from {self.derived_table} WHERE prefix = :prefix);")
-        with self.engine.connect() as connection:  # type:ignore
-            result = connection.execute(sql, {"prefix": prefix}).fetchone()  # type:ignore
+        with self.engine.connect() as connection:
+            result = connection.execute(sql, {"prefix": prefix}).fetchone()
         return bool(result)
 
     @lru_cache(maxsize=100_000)  # noqa:B019
@@ -197,8 +197,8 @@ class RawSQLBackend(Backend):
             WHERE prefix = :prefix and alt = :alt;
         """
         )
-        with self.engine.connect() as connection:  # type:ignore
-            result = connection.execute(sql, {"prefix": prefix, "alt": identifier}).scalar()  # type:ignore
+        with self.engine.connect() as connection:
+            result = connection.execute(sql, {"prefix": prefix, "alt": identifier}).scalar()
         return result if result else identifier
 
     def get_name(self, prefix: str, identifier: str) -> str | None:
@@ -222,8 +222,8 @@ class RawSQLBackend(Backend):
             WHERE prefix = :prefix and identifier = :identifier;
         """
         )
-        with self.engine.connect() as connection:  # type:ignore
-            return connection.execute(sql, {"prefix": prefix, "identifier": identifier}).scalar()  # type:ignore
+        with self.engine.connect() as connection:
+            return connection.execute(sql, {"prefix": prefix, "identifier": identifier}).scalar()
 
     def get_synonyms(self, prefix: str, identifier: str) -> list[str]:
         """Get synonyms with a SQL query to the synonyms table."""
@@ -276,8 +276,8 @@ class RawSQLBackend(Backend):
             WHERE prefix = :prefix and identifier = :identifier;
         """
         )
-        with self.engine.connect() as connection:  # type:ignore
+        with self.engine.connect() as connection:
             results = connection.execute(
                 sql, {"prefix": prefix, "identifier": identifier}
-            ).fetchall()  # type:ignore
+            ).fetchall()
         return results  # type:ignore
