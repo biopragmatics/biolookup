@@ -137,7 +137,7 @@ class BackendTestCase(unittest.TestCase):
         self.assertEqual("go:0000073", r.query)
         self.assertNotIn("species", r)
 
-    def assert_app_lookup(self, app: FastAPI, *, enable_cors: bool = False) -> None:
+    def assert_app_lookup(self, app: FastAPI, *, enable_cors: bool = True) -> None:
         """Run the test on looking up the canonical GO example."""
         client = TestClient(app)
         for headers, val in [
@@ -253,12 +253,12 @@ class TestMemoryBackend(BackendTestCase):
         """Test the in-memory backend."""
         self.help_check(self.backend, counts=self.counts)
 
-    def test_app_no_cors(self) -> None:
+    def test_app(self) -> None:
         """Test the app works properly."""
+        app = get_app_from_backend(self.backend)
+        self.assert_app_lookup(app)
+
+    def test_app_no_cors(self) -> None:
+        """Test the app works properly with no CORS."""
         app = get_app_from_backend(self.backend, enable_cors=False)
         self.assert_app_lookup(app, enable_cors=False)
-
-    def test_app_with_cors(self) -> None:
-        """Test the app works properly."""
-        app = get_app_from_backend(self.backend, enable_cors=True)
-        self.assert_app_lookup(app, enable_cors=True)
