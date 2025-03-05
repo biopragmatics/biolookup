@@ -11,7 +11,6 @@ import flask
 import pandas as pd
 from a2wsgi import WSGIMiddleware
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 from flask import Blueprint, Flask, abort, redirect, render_template, url_for
 from flask_bootstrap import Bootstrap4 as Bootstrap
 from werkzeug.wrappers.response import Response
@@ -171,8 +170,14 @@ def get_app(
     return get_app_from_backend(backend)
 
 
-def get_app_from_backend(backend: Backend, *, allow_cors: bool = True) -> FastAPI:
-    """Build a flask app."""
+def get_app_from_backend(backend: Backend, *, enable_cors: bool = True) -> FastAPI:
+    """Build a FastAPI app.
+
+    :param backend: The backend for looking up information
+    :param enable_cors: Should Cross-Origin Resource Sharing (CORS) be enabled? If True (default),
+        anyone can request content from the instance of the Biolookup Service
+    :returns: A FastAPI instance
+    """
     app = Flask(__name__)
     Bootstrap(app)
     app.config["resolver_backend"] = backend
@@ -193,8 +198,9 @@ def get_app_from_backend(backend: Backend, *, allow_cors: bool = True) -> FastAP
         },
     )
 
-    if allow_cors:
-        # Add CORS middleware
+    if enable_cors:
+        from fastapi.middleware.cors import CORSMiddleware
+
         fast_api.add_middleware(
             CORSMiddleware,
             allow_origins="*",
