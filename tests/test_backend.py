@@ -137,12 +137,18 @@ class BackendTestCase(unittest.TestCase):
         self.assertEqual("go:0000073", r.query)
         self.assertNotIn("species", r)
 
-    def assert_app_lookup(self, app: FastAPI) -> None:
+    def assert_app_lookup(self, app: FastAPI, *, cors_enabled: bool) -> None:
         """Run the test on looking up the canonical GO example."""
         client = TestClient(app)
-        res = client.get(f"/{DEFAULT_ENDPOINT}/go:0000073").json()
-        lookup_result = LookupResult.model_validate(res)
-        self.assert_go_example(lookup_result)
+        for params in [
+            (None, True),
+            ({"Origin": "http://localhost:1234"}, cors_enabled),
+            ({"Origin": "https://example.com"}, cors_enabled),
+        ]:
+            res = client.get(f"/{DEFAULT_ENDPOINT}/go:0000073", params=params)
+            res_json = res.json()
+            lookup_result = LookupResult.model_validate(res_json)
+            self.assert_go_example(lookup_result)
 
 
 @unittest.skipUnless(TEST_URI, reason="No biolookup/test_uri configuration found")
@@ -241,5 +247,6 @@ class TestMemoryBackend(BackendTestCase):
 
     def test_app(self) -> None:
         """Test the app works properly."""
-        app = get_app_from_backend(self.backend)
-        self.assert_app_lookup(app)
+        for allow_cors in True, False:
+            app = get_app_from_backend(self.backend, allow_cors=allow_cors)
+            self.assert_app_lookup(app, cors_enabled=allow_cors)

@@ -171,7 +171,7 @@ def get_app(
     return get_app_from_backend(backend)
 
 
-def get_app_from_backend(backend: Backend) -> FastAPI:
+def get_app_from_backend(backend: Backend, *, allow_cors: bool = True) -> FastAPI:
     """Build a flask app."""
     app = Flask(__name__)
     Bootstrap(app)
@@ -193,14 +193,15 @@ def get_app_from_backend(backend: Backend) -> FastAPI:
         },
     )
 
-    # Add CORS middleware
-    fast_api.add_middleware(
-        CORSMiddleware,
-        allow_origins="*",
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+    if allow_cors:
+        # Add CORS middleware
+        fast_api.add_middleware(
+            CORSMiddleware,
+            allow_origins="*",
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
 
     fast_api.state.backend = backend
     fast_api.include_router(biolookup_blueprint)
