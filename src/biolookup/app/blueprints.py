@@ -20,13 +20,13 @@ logger = logging.getLogger(__name__)
 biolookup_blueprint = APIRouter(prefix="/api")
 
 
-def common_parameters(request: Request) -> Backend:
+def _get_backend(request: Request) -> Backend:
     return request.app.state.backend  # type:ignore
 
 
 @biolookup_blueprint.get("/lookup/{curie}", response_model=LookupResult)
 def lookup(
-    backend: Annotated[Backend, Depends(common_parameters)],
+    backend: Annotated[Backend, Depends(_get_backend)],
     curie: str = Path(
         ...,
         description="A compact uniform resource identifier (CURIE) of an entity",
@@ -57,7 +57,7 @@ def lookup(
 
 
 @biolookup_blueprint.route("/summary.json")
-def summary_json(backend: Annotated[Backend, Depends(common_parameters)]) -> Mapping[Prefix, Any]:
+def summary_json(backend: Annotated[Backend, Depends(_get_backend)]) -> Mapping[Prefix, Any]:
     """Summary of the content in the service."""
     return backend.summarize_names()
 
