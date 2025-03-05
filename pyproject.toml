@@ -66,6 +66,7 @@ dependencies = [
     "pydantic",
     "fastapi",
     "a2wsgi",
+    "pystow",
 ]
 
 [project.optional-dependencies]

@@ -14,22 +14,26 @@ __all__ = [
 ]
 
 
+X = TypeVar("X")
+Caller = Callable[[Prefix], Mapping[Identifier, X] | None]
+
+
 class MemoryBackend(Backend):
     """A resolution service using a dictionary-based in-memory cache."""
 
     def __init__(
         self,
         *,
-        get_id_name_mapping,
-        get_id_species_mapping,
-        get_alts_to_id,
-        get_id_synonyms_mapping=None,
+        get_id_name_mapping: Caller[str],
+        get_id_species_mapping: Caller[str],
+        get_alts_to_id: Caller[str],
+        get_id_synonyms_mapping: Caller[list[str]] | None = None,
         summarize_names: Callable[[], Mapping[Prefix, Any]] | None,
         summarize_alts: Callable[[], Mapping[Prefix, Any]] | None = None,
         summarize_definitions: Callable[[], Mapping[Prefix, Any]] | None = None,
         summarize_species: Callable[[], Mapping[Prefix, Any]] | None = None,
         summarize_synonyms: Callable[[], Mapping[Prefix, Any]] | None = None,
-        get_id_definition_mapping=None,
+        get_id_definition_mapping: Caller[str] | None = None,
     ) -> None:
         """Initialize the in-memory backend.
 
@@ -176,13 +180,10 @@ def _prepare_backend_with_lookup(
     )
 
 
-X = TypeVar("X")
-
-
 def _wrap_pyobo_lookup(
     data: Mapping[Prefix, Mapping[Identifier, X]] | None,
-    func: Callable[[Prefix], Mapping[Identifier, X] | None],
-) -> tuple[Callable[[Prefix], Mapping[Identifier, X] | None], Callable[[], Counter[Prefix]]]:
+    func: Caller[X],
+) -> tuple[Caller[X], Callable[[], Counter[Prefix]]]:
     if data is None:  # lazy mode, will download/cache data as needed
         return func, Counter
 

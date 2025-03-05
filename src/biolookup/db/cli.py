@@ -63,7 +63,7 @@ test_option = click.option("--test", is_flag=True, help="Test run with a small t
 @xrefs_table_option
 @xrefs_path_option
 @test_option
-@verbose_option
+@verbose_option  # type:ignore
 @click.option("--date", required=True)
 def load(
     uri: str,
@@ -77,7 +77,7 @@ def load(
     xrefs_path: str,
     test: bool,
     date: str | None,
-):
+) -> None:
     """Load the SQL database."""
     from .loader import load as _load
     from .loader import load_date

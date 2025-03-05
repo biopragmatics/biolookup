@@ -16,13 +16,13 @@ logger = logging.getLogger(__name__)
 
 @click.group()
 @click.version_option()
-def main():
+def main() -> None:
     """CLI for the Biolookup Service."""
 
 
 @main.command(name="lookup")
 @click.argument("curie")
-def lookup(curie: str):
+def lookup(curie: str) -> None:
     """Look up a CURIE."""
     click.echo(json.dumps(api.lookup(curie), indent=2, sort_keys=True))
 

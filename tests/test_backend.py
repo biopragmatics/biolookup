@@ -3,6 +3,7 @@
 import gzip
 import tempfile
 import unittest
+from collections.abc import Iterable
 from pathlib import Path
 from typing import ClassVar
 
@@ -55,7 +56,7 @@ XREFS: list[tuple[str, ...]] = []
 RELS: list[tuple[str, ...]] = []
 
 
-def _write(path, data, *last):
+def _write(path: Path, data: Iterable[tuple[str, ...]], *last: str) -> None:
     with gzip.open(path, "wt") as file:
         print("prefix", "identifier", *last, sep="\t", file=file)
         for line in data:

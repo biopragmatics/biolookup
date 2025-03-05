@@ -1,5 +1,7 @@
 """Constants for the biolookup service."""
 
+from typing import cast
+
 import pystow
 
 REFS_TABLE_NAME = "obo_reference"
@@ -21,7 +23,7 @@ DEFAULT_ENDPOINT = DEFAULT_ENDPOINT.strip("/")
 
 def get_sqlalchemy_uri() -> str:
     """Get the SQLAlchemy URI."""
-    rv = pystow.get_config("biolookup", "sqlalchemy_uri")
+    rv = cast(str, pystow.get_config("biolookup", "sqlalchemy_uri"))
     if rv is not None:
         return rv
 

@@ -12,7 +12,7 @@ HERE = pathlib.Path(__file__).parent.resolve()
 STATIC = HERE.joinpath("static")
 
 
-def main():
+def main() -> None:
     """Generate charts for the biolookup app."""
     # 1
     backend = backends.get_backend(sql=True)

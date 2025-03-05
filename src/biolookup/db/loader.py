@@ -27,8 +27,9 @@ from pyobo.resource_utils import (
     ensure_species,
     ensure_synonyms,
 )
-from sqlalchemy import create_engine, text
+from sqlalchemy import PoolProxiedConnection, create_engine, text
 from sqlalchemy.engine import Engine
+from sqlalchemy.engine.interfaces import DBAPICursor
 from tabulate import tabulate
 
 from ..constants import (
@@ -61,7 +62,7 @@ def echo(s: str, **kwargs: Any) -> None:
 TEST_N = 100_000
 
 
-def run(cursor, sql, desc):
+def run(cursor: DBAPICursor, sql: str, desc: str) -> None:
     """Run a command with colorful logging."""
     echo(f"Start {desc}")
     echo(sql, fg="yellow")
@@ -112,7 +113,7 @@ class Loader:
         *,
         path: None | str | Path = None,
         test: bool = False,
-    ):
+    ) -> None:
         """Load the alternative identifiers table."""
         self._load_three_col_table(
             table=self.alts_table,
@@ -129,7 +130,7 @@ class Loader:
         *,
         path: None | str | Path = None,
         test: bool = False,
-    ):
+    ) -> None:
         """Load the definitions table."""
         self._load_three_col_table(
             table=self.defs_table,
@@ -144,7 +145,7 @@ class Loader:
         *,
         path: None | str | Path = None,
         test: bool = False,
-    ):
+    ) -> None:
         """Load the species table."""
         self._load_three_col_table(
             table=self.species_table,
@@ -159,7 +160,7 @@ class Loader:
         *,
         path: None | str | Path = None,
         test: bool = False,
-    ):
+    ) -> None:
         """Load the names table."""
         self._load_three_col_table(
             table=self.refs_table,
@@ -174,7 +175,7 @@ class Loader:
         *,
         path: None | str | Path = None,
         test: bool = False,
-    ):
+    ) -> None:
         """Load the synonyms table."""
         self._load_three_col_table(
             table=self.synonyms_table,
@@ -190,7 +191,7 @@ class Loader:
         *,
         path: None | str | Path = None,
         test: bool = False,
-    ):
+    ) -> None:
         """Load xrefs table."""
         self._load_table(
             table=self.xrefs_table,
@@ -207,7 +208,7 @@ class Loader:
         *,
         path: None | str | Path = None,
         test: bool = False,
-    ):
+    ) -> None:
         """Load relations table."""
         self._load_table(
             table=self.rels_table,
@@ -298,7 +299,13 @@ class Loader:
         ).rstrip()
 
     @staticmethod
-    def _copy(connection, cursor, sql, path, test):
+    def _copy(
+        connection: PoolProxiedConnection,
+        cursor: DBAPICursor,
+        sql: str,
+        path: str | Path,
+        test: bool,
+    ) -> None:
         echo("Start COPY")
         echo(sql, fg="yellow")
         try:
@@ -416,7 +423,7 @@ class Loader:
             select_statement = text(f"SELECT * FROM {table} LIMIT 10;")  # noqa:S608
             click.secho("Example query:", fg="green", bold=True)
             click.secho(select_statement, fg="green")
-            result = connection.execute(select_statement)  # type:ignore
+            result = connection.execute(select_statement)
             if isinstance(target_col, str):
                 headers = ["id", "prefix", "identifier", target_col]
             else:
@@ -429,10 +436,10 @@ class Loader:
             )
             click.secho("Top entries in summary view:", fg="green", bold=True)
             click.secho(select_statement, fg="green")
-            result = connection.execute(select_statement)  # type:ignore
+            result = connection.execute(select_statement)
             click.echo(tabulate(map(tuple, result), headers=["prefix", "count"]))
 
-    def derive_table(self):
+    def derive_table(self) -> None:
         """Collapse the name, definition, and species tables."""
         drop_derived = f"DROP TABLE IF EXISTS {self.derived_table} CASCADE;"
         create_derived = dedent(
@@ -472,7 +479,7 @@ class Loader:
                 cursor.execute(drop_species)
 
 
-def load_date(*, date: str, **kwargs):
+def load_date(*, date: str, **kwargs: Any) -> None:
     """Load the database from the given date."""
     directory = pystow.join("pyobo", "database", date)
     return load(

@@ -3,10 +3,13 @@
 import logging
 import os
 import time
+from collections.abc import Mapping
+from typing import Annotated, Any
 
-from fastapi import APIRouter, Path, Request
+from fastapi import APIRouter, Depends, Path, Request
 
-from ..backends.backend import LookupResult
+from ..backends import Backend
+from ..backends.backend import LookupResult, Prefix
 from ..constants import DEFAULT_URL
 
 __all__ = [
@@ -17,9 +20,13 @@ logger = logging.getLogger(__name__)
 biolookup_blueprint = APIRouter(prefix="/api")
 
 
+def common_parameters(request: Request) -> Backend:
+    return request.app.state.backend  # type:ignore
+
+
 @biolookup_blueprint.get("/lookup/{curie}", response_model=LookupResult)
 def lookup(
-    request: Request,
+    backend: Annotated[Backend, Depends(common_parameters)],
     curie: str = Path(
         ...,
         description="A compact uniform resource identifier (CURIE) of an entity",
@@ -38,7 +45,6 @@ def lookup(
     - ``do:14330``, a match to doid via synonyms in the Bioregistry. Still resolves to Parkinson's
       disease in the Disease Ontology.
     """
-    backend = request.app.state.backend
     logger.debug("querying %s", curie)
     start = time.time()
     rv = backend.lookup(curie)
@@ -51,14 +57,13 @@ def lookup(
 
 
 @biolookup_blueprint.route("/summary.json")
-def summary_json(request: Request):
+def summary_json(backend: Annotated[Backend, Depends(common_parameters)]) -> Mapping[Prefix, Any]:
     """Summary of the content in the service."""
-    backend = request.app.state.backend
     return backend.summarize_names()
 
 
 @biolookup_blueprint.route("/size")
-def size():
+def size() -> dict[str, str]:
     """Return how much memory we're taking.
 
     Doesn't work if you're running with Gunicorn because it makes child processes.
