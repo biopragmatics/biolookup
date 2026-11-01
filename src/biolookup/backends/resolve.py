@@ -23,13 +23,13 @@ logger = logging.getLogger(__name__)
 
 def get_backend(  # noqa:C901
     *,
-    name_data: None | str | pd.DataFrame = None,
-    alts_data: None | str | pd.DataFrame = None,
-    defs_data: None | str | pd.DataFrame = None,
-    species_data: None | str | pd.DataFrame = None,
+    name_data: str | pd.DataFrame | None = None,
+    alts_data: str | pd.DataFrame | None = None,
+    defs_data: str | pd.DataFrame | None = None,
+    species_data: str | pd.DataFrame | None = None,
     lazy: bool = False,
     sql: bool = False,
-    uri: None | str | Engine = None,
+    uri: str | Engine | None = None,
     refs_table: str | None = None,
     alts_table: str | None = None,
     defs_table: str | None = None,
