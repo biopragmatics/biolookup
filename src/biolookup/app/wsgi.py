@@ -170,8 +170,14 @@ def get_app(
     return get_app_from_backend(backend)
 
 
-def get_app_from_backend(backend: Backend) -> FastAPI:
-    """Build a flask app."""
+def get_app_from_backend(backend: Backend, *, enable_cors: bool = True) -> FastAPI:
+    """Build a FastAPI app.
+
+    :param backend: The backend for looking up information
+    :param enable_cors: Should Cross-Origin Resource Sharing (CORS) be enabled? If True (default),
+        anyone can request content from the instance of the Biolookup Service
+    :returns: A FastAPI instance
+    """
     app = Flask(__name__)
     Bootstrap(app)
     app.config["resolver_backend"] = backend
@@ -191,6 +197,18 @@ def get_app_from_backend(backend: Backend) -> FastAPI:
             "url": "https://github.com/biopragmatics/biolookup/blob/main/LICENSE",
         },
     )
+
+    if enable_cors:
+        from fastapi.middleware.cors import CORSMiddleware
+
+        fast_api.add_middleware(
+            CORSMiddleware,
+            allow_origins="*",
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
+
     fast_api.state.backend = backend
     fast_api.include_router(biolookup_blueprint)
     fast_api.mount("/", WSGIMiddleware(app))  # type:ignore
