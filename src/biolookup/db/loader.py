@@ -75,7 +75,7 @@ class Loader:
 
     def __init__(
         self,
-        uri: None | str | Engine = None,
+        uri: str | Engine | None = None,
         *,
         refs_table: str | None = None,
         alts_table: str | None = None,
@@ -111,7 +111,7 @@ class Loader:
     def load_alts(
         self,
         *,
-        path: None | str | Path = None,
+        path: str | Path | None = None,
         test: bool = False,
     ) -> None:
         """Load the alternative identifiers table."""
@@ -128,7 +128,7 @@ class Loader:
     def load_definition(
         self,
         *,
-        path: None | str | Path = None,
+        path: str | Path | None = None,
         test: bool = False,
     ) -> None:
         """Load the definitions table."""
@@ -143,7 +143,7 @@ class Loader:
     def load_species(
         self,
         *,
-        path: None | str | Path = None,
+        path: str | Path | None = None,
         test: bool = False,
     ) -> None:
         """Load the species table."""
@@ -158,7 +158,7 @@ class Loader:
     def load_name(
         self,
         *,
-        path: None | str | Path = None,
+        path: str | Path | None = None,
         test: bool = False,
     ) -> None:
         """Load the names table."""
@@ -173,7 +173,7 @@ class Loader:
     def load_synonyms(
         self,
         *,
-        path: None | str | Path = None,
+        path: str | Path | None = None,
         test: bool = False,
     ) -> None:
         """Load the synonyms table."""
@@ -189,7 +189,7 @@ class Loader:
     def load_xrefs(
         self,
         *,
-        path: None | str | Path = None,
+        path: str | Path | None = None,
         test: bool = False,
     ) -> None:
         """Load xrefs table."""
@@ -206,7 +206,7 @@ class Loader:
     def load_rels(
         self,
         *,
-        path: None | str | Path = None,
+        path: str | Path | None = None,
         test: bool = False,
     ) -> None:
         """Load relations table."""
@@ -391,20 +391,22 @@ class Loader:
         unique_curie_stmt = self._create_unique_ddl(table=table)
         index_reverse_statement = f"CREATE INDEX ON {table} (prefix, {target_col});"
 
-        with closing(self.engine.raw_connection()) as connection:
-            with closing(connection.cursor()) as cursor:
-                run(cursor, drop_statement, "dropping table")
-                run(cursor, drop_summary_statement, "dropping summary table")
-                run(cursor, create_statement, "creating table")
-                self._copy(
-                    connection=connection, cursor=cursor, sql=copy_statement, path=path, test=test
-                )
-                run(cursor, cleanup_statement, "re-enable autovacuum")
-                run(cursor, index_curie_statement, "index on prefix/identifier")
-                if add_unique_constraints:
-                    run(cursor, unique_curie_stmt, "constrain unique prefix/identifier")
-                if add_reverse_index:
-                    run(cursor, index_reverse_statement, "reversing index")
+        with (
+            closing(self.engine.raw_connection()) as connection,
+            closing(connection.cursor()) as cursor,
+        ):
+            run(cursor, drop_statement, "dropping table")
+            run(cursor, drop_summary_statement, "dropping summary table")
+            run(cursor, create_statement, "creating table")
+            self._copy(
+                connection=connection, cursor=cursor, sql=copy_statement, path=path, test=test
+            )
+            run(cursor, cleanup_statement, "re-enable autovacuum")
+            run(cursor, index_curie_statement, "index on prefix/identifier")
+            if add_unique_constraints:
+                run(cursor, unique_curie_stmt, "constrain unique prefix/identifier")
+            if add_reverse_index:
+                run(cursor, index_reverse_statement, "reversing index")
 
         with closing(self.engine.raw_connection()) as connection:
             connection.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)  # type:ignore
@@ -461,22 +463,24 @@ class Loader:
         """
         ).rstrip()
 
-        with closing(self.engine.raw_connection()) as connection:
-            with closing(connection.cursor()) as cursor:
-                run(cursor, drop_derived, "cleanup derived table")
-                run(cursor, create_derived, "create derived table")
-                run(cursor, pkey_statement, "indexing derived table primary key")
+        with (
+            closing(self.engine.raw_connection()) as connection,
+            closing(connection.cursor()) as cursor,
+        ):
+            run(cursor, drop_derived, "cleanup derived table")
+            run(cursor, create_derived, "create derived table")
+            run(cursor, pkey_statement, "indexing derived table primary key")
 
-                echo("Dropping unused tables")
-                drop_refs = f"DROP TABLE {self.refs_table} CASCADE;"
-                echo(drop_refs)
-                cursor.execute(drop_refs)
-                drop_defs = f"DROP TABLE {self.defs_table} CASCADE;"
-                echo(drop_defs)
-                cursor.execute(drop_defs)
-                drop_species = f"DROP TABLE {self.species_table} CASCADE;"
-                echo(drop_species)
-                cursor.execute(drop_species)
+            echo("Dropping unused tables")
+            drop_refs = f"DROP TABLE {self.refs_table} CASCADE;"
+            echo(drop_refs)
+            cursor.execute(drop_refs)
+            drop_defs = f"DROP TABLE {self.defs_table} CASCADE;"
+            echo(drop_defs)
+            cursor.execute(drop_defs)
+            drop_species = f"DROP TABLE {self.species_table} CASCADE;"
+            echo(drop_species)
+            cursor.execute(drop_species)
 
 
 def load_date(*, date: str, **kwargs: Any) -> None:
@@ -496,13 +500,13 @@ def load_date(*, date: str, **kwargs: Any) -> None:
 
 def load(
     *,
-    refs_path: None | str | Path = None,
-    alts_path: None | str | Path = None,
-    defs_path: None | str | Path = None,
-    species_path: None | str | Path = None,
-    synonyms_path: None | str | Path = None,
-    xrefs_path: None | str | Path = None,
-    rels_path: None | str | Path = None,
+    refs_path: str | Path | None = None,
+    alts_path: str | Path | None = None,
+    defs_path: str | Path | None = None,
+    species_path: str | Path | None = None,
+    synonyms_path: str | Path | None = None,
+    xrefs_path: str | Path | None = None,
+    rels_path: str | Path | None = None,
     refs_table: str | None = None,
     alts_table: str | None = None,
     defs_table: str | None = None,
@@ -556,7 +560,7 @@ def load(
     echo("Done")
 
 
-def _ensure_engine(engine: None | str | Engine = None) -> Engine:
+def _ensure_engine(engine: str | Engine | None = None) -> Engine:
     if engine is None:
         engine = get_sqlalchemy_uri()
     if isinstance(engine, str):

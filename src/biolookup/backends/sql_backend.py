@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 
 def _ensure_engine(
-    engine: None | str | Engine, engine_kwargs: Mapping[str, Any] | None = None
+    engine: str | Engine | None, engine_kwargs: Mapping[str, Any] | None = None
 ) -> Engine:
     if engine is None:
         return create_engine(get_sqlalchemy_uri(), **(engine_kwargs or {}))
@@ -49,7 +49,7 @@ class RawSQLBackend(Backend):
 
     def __init__(
         self,
-        engine: None | str | Engine = None,
+        engine: str | Engine | None = None,
         *,
         engine_kwargs: Mapping[str, Any] | None = None,
         refs_table: str | None = None,

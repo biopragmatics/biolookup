@@ -1,5 +1,5 @@
 [build-system]
-requires = ["uv_build>=0.6.6,<1.0"]
+requires = ["uv_build>=0.13.0,<1.0"]
 build-backend = "uv_build"
 
 [project]
@@ -27,10 +27,11 @@ classifiers = [
     "Framework :: Sphinx",
     "Natural Language :: English",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
     "Programming Language :: Python :: 3 :: Only",
     "Typing :: Typed",
     # TODO add your topics from the Trove controlled vocabulary (see https://pypi.org/classifiers)
@@ -43,18 +44,19 @@ keywords = [
 
 # License Information.
 # See PEP-639 at https://peps.python.org/pep-0639/#add-license-files-key
+license = "MIT"
 license-files = [
     "LICENSE",
 ]
 
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "more_itertools", # missing from itertools in stdlib
     "tqdm", # progress bars
     "click",
     "more_click",
     "typing-extensions",
-    "pyobo @ git+https://github.com/biopragmatics/pyobo",
+    "pyobo",
     "flask",
     "bootstrap-flask",
     "psutil",
@@ -65,7 +67,7 @@ dependencies = [
     "fastapi",
     "a2wsgi",
     "pystow",
-    "bioregistry>=0.12.3",
+    "bioregistry>=0.15.3",
 ]
 
 [project.optional-dependencies]
@@ -75,7 +77,7 @@ tests = [
     "fastapi[standard]",
 ]
 docs = [
-    "sphinx>=8",
+    "sphinx>=9",
     "sphinx-rtd-theme>=3.0",
     "sphinx-click",
     "sphinx_automodapi",

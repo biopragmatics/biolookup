@@ -118,10 +118,10 @@ def entity(curie: str) -> str | Response:
 
 
 def get_app(
-    name_data: None | str | pd.DataFrame = None,
-    alts_data: None | str | pd.DataFrame = None,
-    defs_data: None | str | pd.DataFrame = None,
-    species_data: None | str | pd.DataFrame = None,
+    name_data: str | pd.DataFrame | None = None,
+    alts_data: str | pd.DataFrame | None = None,
+    defs_data: str | pd.DataFrame | None = None,
+    species_data: str | pd.DataFrame | None = None,
     lazy: bool = False,
     sql: bool = False,
     uri: str | None = None,
